@@ -105,7 +105,18 @@ class MainActivity : AppCompatActivity(),
 
     override fun onDoubleTap(event: MotionEvent): Boolean {
         Log.d(DEBUG_TAG, "onDoubleTap: $event")
+        enableHomeButtons()
         return true
+    }
+
+    private fun enableHomeButtons() {
+        settings_btn.visibility = View.VISIBLE
+        repeat_btn.visibility = View.VISIBLE
+        Handler().postDelayed(
+                {
+                    settings_btn.visibility = View.GONE
+                    repeat_btn.visibility = View.GONE
+                },3200)
     }
 
     override fun onLongPress(event: MotionEvent) {
