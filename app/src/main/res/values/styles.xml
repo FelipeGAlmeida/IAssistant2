@@ -13,4 +13,16 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
+    <!-- Alert dialog theme -->
+    <style name="CustomDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:buttonBarButtonStyle">@style/MyDialogButtonStyle</item>
+    </style>
+
+    <style name="MyDialogButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
 </resources>
