@@ -1,14 +1,36 @@
 package fgapps.com.br.iassistant2.utils
 
+import android.os.Handler
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import fgapps.com.br.iassistant2.activities.MainActivity
+import java.util.*
 
 class Animations {
 
     companion object {
 
-        fun fade(view: View, duration: Long, fadeout: Boolean) {
+        private var blink_flag: Boolean = true
+        private var timer: Timer?= null
+        fun blink(mainActivity: MainActivity, view: View, duration: Long){
+            timer = Timer()
+            timer!!.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    if(blink_flag) fade(mainActivity, view, duration / 2, true)
+                    else fade(mainActivity, view, duration / 2, false)
+                    blink_flag = !blink_flag
+                }
+            },0 , duration/2)
+        }
+
+        fun stopBlink(){
+            if(timer != null){
+                timer!!.cancel()
+            }
+        }
+
+        fun fade(mainActivity: MainActivity, view: View, duration: Long, fadeout: Boolean) {
 
             fun Boolean.toFloat() = if(this) 1f else 0f
 
@@ -32,8 +54,7 @@ class Animations {
                     }
                 }
             })
-
-            view.startAnimation(alphaAnimation)
+            mainActivity.runOnUiThread { view.startAnimation(alphaAnimation) }
         }
 
     }

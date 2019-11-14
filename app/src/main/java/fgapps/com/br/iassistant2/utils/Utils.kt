@@ -16,6 +16,16 @@ class Utils {
             return volume
         }
 
+        fun boundMusicIndexes(size: Int, curr: Int): IntArray{
+            var prev = curr - 1
+            var next = curr + 1
+
+            if(prev < 0) prev = size - 1
+            if(next > size-1) next = 0
+
+            return intArrayOf(curr, prev, next)
+        }
+
         fun showAlertDialog(mainActivity: MainActivity, title: String, message: String){
             val builder = AlertDialog.Builder(mainActivity)
             builder.setTitle("Titulo")

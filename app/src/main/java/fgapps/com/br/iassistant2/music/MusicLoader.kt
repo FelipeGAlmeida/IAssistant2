@@ -1,19 +1,19 @@
 package fgapps.com.br.iassistant2.music
 
+import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
-import fgapps.com.br.iassistant2.activities.MainActivity
 
 class MusicLoader {
 
     companion object {
 
-        fun loadAllMusic(mainActivity: MainActivity): ArrayList<Music>{
+        fun loadAllMusic(context: Context): ArrayList<Music>{
             val musicList = ArrayList<Music>()
 
-            var musicResolver = mainActivity.contentResolver
-            var musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            var musicCursor = musicResolver.query(musicUri,
+            val musicResolver = context.contentResolver
+            val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            val musicCursor = musicResolver.query(musicUri,
                                         null,
                                         null,
                                         null,
@@ -40,6 +40,8 @@ class MusicLoader {
                     else
                         Log.v("MUSIC_LIST", "Song $thisName wasn't added!")
                 }while(musicCursor.moveToNext())
+
+                musicCursor.close()
                 return musicList
             }
             return musicList

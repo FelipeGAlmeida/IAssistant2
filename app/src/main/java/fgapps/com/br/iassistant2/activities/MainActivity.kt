@@ -1,15 +1,19 @@
 package fgapps.com.br.iassistant2.activities
 
 import android.Manifest
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Toast
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.bumptech.glide.Glide
@@ -19,24 +23,33 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import fgapps.com.br.iassistant2.R
 import fgapps.com.br.iassistant2.gestures.GestureController
+import fgapps.com.br.iassistant2.interfaces.MediaPlayerListener
 import fgapps.com.br.iassistant2.interfaces.MusicChangeListener
 import fgapps.com.br.iassistant2.interfaces.ShowButtonsListener
 import fgapps.com.br.iassistant2.interfaces.VolumeChangeListener
+import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.music.MusicLoader
+import fgapps.com.br.iassistant2.music.MusicPlayerService
 import fgapps.com.br.iassistant2.utils.Animations
+import fgapps.com.br.iassistant2.utils.MediaPlayerStates
 import fgapps.com.br.iassistant2.utils.Permissions
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),
                     MusicChangeListener,
                     VolumeChangeListener,
-                    ShowButtonsListener {
+                    ShowButtonsListener,
+                    MediaPlayerListener{
 
     /*** Variables ***/
+    private lateinit var mMusicService: MusicPlayerService
+    private var mBound: Boolean = false
+
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
+    private lateinit var background: ImageView
 
-    var mWidth: Int = 0
+    fun getAppWidth() = background.width
 
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +62,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun setBackground() {
-        val background = background_img
-        mWidth = background.width
+        background = background_img
         Glide.with(this)
                 .load(R.drawable.back_anim1)
                 .listener(object : RequestListener<Drawable> {
@@ -60,7 +72,7 @@ class MainActivity : AppCompatActivity(),
 
                     override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
                         Handler().postDelayed({
-                            Animations.fade(splashscreen_id, 800, true)
+                            Animations.fade(this@MainActivity, splashscreen_panel, 800, true)
                             if(Permissions.checkPermission(this@MainActivity,
                                     Manifest.permission.READ_EXTERNAL_STORAGE,
                                     Permissions.READ_EXTERNAL_STORAGE_CODE)) loadMusics()
@@ -87,6 +99,15 @@ class MainActivity : AppCompatActivity(),
             }
 
         })
+
+        repeat_btn.setOnClickListener(object: View.OnClickListener{
+            override fun onClick(p0: View?) {
+                if(mBound)
+                    if(mMusicService.isPlaying()) mMusicService.pause()
+                    else mMusicService.play()
+            }
+
+        })
     }
 
     private fun loadMusics(){
@@ -106,29 +127,49 @@ class MainActivity : AppCompatActivity(),
 
     /*** Gesture controller response functions ***/
     override fun nextMusic() {
-        Toast.makeText(this, "Música seguinte", Toast.LENGTH_LONG).show()
+        if(mBound) mMusicService.next()
     }
 
     override fun prevMusic() {
-        Toast.makeText(this, "Música anterior", Toast.LENGTH_LONG).show()
+        if(mBound) mMusicService.prev()
     }
 
-    override fun volumeUp(volume: Int) {
-        Toast.makeText(this, "Aumentou volume: $volume", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun volumeDown(volume: Int) {
-        Toast.makeText(this, "abaixou volume: $volume", Toast.LENGTH_SHORT).show()
+    override fun volumeChange(volume: Int) {
+        val value: Float = volume/100f
+        if(mBound) mMusicService.setVolume(value)
     }
 
     override fun showButtons() {
-        Animations.fade(settings_btn, 300, false)
-        Animations.fade(repeat_btn, 300, false)
+        Animations.fade(this@MainActivity, settings_btn, 300, false)
+        Animations.fade(this@MainActivity, repeat_btn, 300, false)
         Handler().postDelayed(
                 {
-                    Animations.fade(settings_btn, 300,true)
-                    Animations.fade(repeat_btn, 300,true)
+                    Animations.fade(this@MainActivity, settings_btn, 300,true)
+                    Animations.fade(this@MainActivity, repeat_btn, 300,true)
                 },3200)
+    }
+
+    /*** Media Player response functions ***/
+
+    override fun stateChanged(state: MediaPlayerStates) {
+        Animations.stopBlink()
+        when(state){
+            MediaPlayerStates.PREPARING -> {}
+            MediaPlayerStates.STARTED -> {
+                Animations.fade(this@MainActivity, music_panel, 500, false)
+            }
+            MediaPlayerStates.PAUSED -> {
+                Animations.blink(this@MainActivity, music_panel, 800)
+            }
+            MediaPlayerStates.IDLE -> {}
+
+        }
+    }
+
+    override fun musicChanged(curr: Music, prev: Music, next: Music) {
+        prevSong_txt.text = prev.name
+        currentSong_txt.text = curr.name
+        nextSong_txt.text = next.name
     }
 
     /*** Request permission Callback ***/
@@ -145,8 +186,38 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
+    /*** Service bounding ***/
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as MusicPlayerService.MusicPlayerBinder
+            mMusicService = binder.getService()
+            mMusicService.setMainActivity(this@MainActivity)
+            mBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            mBound = false
+        }
+    }
+
     /*** Back button action ***/
     override fun onBackPressed() {
         return
+    }
+
+    /*** Activity overridings ***/
+    override fun onStart() {
+        super.onStart()
+        Intent(this, MusicPlayerService::class.java).also { intent ->
+            this@MainActivity.startService(intent)
+            bindService(intent, connection, Context.BIND_AUTO_CREATE) // Binds to local service
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unbindService(connection) //Unbinds from local service
+        mBound = false
     }
 }
