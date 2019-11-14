@@ -31,7 +31,7 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
             mHandler = Handler()
         }
 
-        val screenX = 1080//background_img.width TODO: GET SCREEN SIZE !
+        val screenX = mActivity.mWidth
         val delay: Long
         val isMusic: Boolean
         if(downEvent.x < (screenX * 80 / 100)){

@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity(),
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
 
+    var mWidth: Int = 0
+
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity(),
 
     private fun setBackground() {
         val background = background_img
+        mWidth = background.width
         Glide.with(this)
                 .load(R.drawable.back_anim1)
                 .listener(object : RequestListener<Drawable> {
