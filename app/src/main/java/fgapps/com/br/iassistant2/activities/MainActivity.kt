@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.bumptech.glide.Glide
@@ -22,6 +23,7 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import fgapps.com.br.iassistant2.R
+import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.gestures.GestureController
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.music.MusicLoader
@@ -191,6 +193,8 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun showButtons() {
+        if(mDimmer.isDimmeredDown()) mDimmer.up()
+
         if(mButtonHandler == null){
             mButtonHandler = Handler()
         }
@@ -215,7 +219,11 @@ class MainActivity : AppCompatActivity(),
 
     override fun singlePress() {
         if(mDimmer.isDimmeredDown()) mDimmer.up()
-        else mDimmer.down()
+        else {
+            val s = test_edit.text.toString()
+
+            checkAction(s)
+        }
     }
 
     override fun longPress() {
@@ -292,5 +300,34 @@ class MainActivity : AppCompatActivity(),
         super.onStop()
         unbindService(connection) //Unbinds from local service
         mBound = false
+    }
+
+
+    ////////////////// TEST
+    private fun checkAction(s: String) {
+        var g_verb = ""
+        var g_comp = ""
+        var g_extra = ""
+
+        val words = s.split(" ")
+        for (word in words){
+            for(verb in Dictionary.actions){
+                if(word.contains(verb.value)){
+                    g_verb = verb.key
+                }
+            }
+            for(comp in Dictionary.complements){
+                if(word.contains(comp.value)){
+                    g_comp = comp.key
+                }
+            }
+            for(extra in Dictionary.extras){
+                if(word.contains(extra.value)){
+                    g_extra = extra.key
+                }
+            }
+        }
+
+        Toast.makeText(this@MainActivity, g_verb + g_comp + g_extra, Toast.LENGTH_LONG).show()
     }
 }
