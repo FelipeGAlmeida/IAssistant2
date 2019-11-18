@@ -23,15 +23,13 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import fgapps.com.br.iassistant2.R
 import fgapps.com.br.iassistant2.gestures.GestureController
-import fgapps.com.br.iassistant2.interfaces.MediaPlayerListener
-import fgapps.com.br.iassistant2.interfaces.MusicChangeListener
-import fgapps.com.br.iassistant2.interfaces.ShowButtonsListener
-import fgapps.com.br.iassistant2.interfaces.VolumeChangeListener
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.music.MusicLoader
 import fgapps.com.br.iassistant2.music.MusicPlayerService
 import fgapps.com.br.iassistant2.utils.Animations
-import fgapps.com.br.iassistant2.utils.MediaPlayerStates
+import fgapps.com.br.iassistant2.defines.MediaPlayerStates
+import fgapps.com.br.iassistant2.interfaces.*
+import fgapps.com.br.iassistant2.utils.Dimmer
 import fgapps.com.br.iassistant2.utils.Permissions
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -39,23 +37,26 @@ class MainActivity : AppCompatActivity(),
                     MusicChangeListener,
                     VolumeChangeListener,
                     ShowButtonsListener,
-                    MediaPlayerListener{
+                    MediaPlayerListener,
+                    TouchListener {
 
     /*** Variables ***/
     private lateinit var mMusicService: MusicPlayerService
     private var mBound: Boolean = false
 
+    private lateinit var mDimmer: Dimmer
+
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
+
     private lateinit var background: ImageView
+    fun getAppWidth() = background.width
+    fun getAppHeight() = background.height
 
     private var mVolumeHandler: Handler? = null
     private var mVolumeShown: Boolean = false
     private var mButtonHandler: Handler? = null
     private var mButtonShown: Boolean = false
-
-    fun getAppWidth() = background.width
-    fun getAppHeight() = background.height
 
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +65,7 @@ class MainActivity : AppCompatActivity(),
 
         setBackground()
         setGestures()
+        setDimmer()
         setControls()
     }
 
@@ -138,6 +140,11 @@ class MainActivity : AppCompatActivity(),
         volume_bar.layoutParams = lp
     }
 
+    private fun setDimmer(){
+        mDimmer = Dimmer(this@MainActivity)
+        mDimmer.init()
+    }
+
     private fun loadMusics(){
         val musics = MusicLoader.loadAllMusic(this)
         for (music in musics) {
@@ -204,6 +211,15 @@ class MainActivity : AppCompatActivity(),
                     Animations.fade(this@MainActivity, repeat_btn, 300, mButtonShown)
                     mButtonShown = false
                 },3200)
+    }
+
+    override fun singlePress() {
+        if(mDimmer.isDimmeredDown()) mDimmer.up()
+        else mDimmer.down()
+    }
+
+    override fun longPress() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     /*** Media Player response functions ***/

@@ -1,7 +1,7 @@
 package fgapps.com.br.iassistant2.interfaces
 
 import fgapps.com.br.iassistant2.music.Music
-import fgapps.com.br.iassistant2.utils.MediaPlayerStates
+import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 
 interface MediaPlayerListener {
 

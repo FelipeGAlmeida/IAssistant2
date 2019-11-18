@@ -48,7 +48,7 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
     }
 
     override fun onSingleTapConfirmed(event: MotionEvent): Boolean {
-        //Log.d(DEBUG_TAG, "onSingleTapUp: $event")
+        mActivity.singlePress()
         return true
     }
 
@@ -58,7 +58,7 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
     }
 
     override fun onLongPress(event: MotionEvent) {
-        //Log.d(DEBUG_TAG, "onLongPress: $event")
+        mActivity.longPress()
     }
 
     private fun analyseGesture(startX: Float, startY: Float, endX: Float, endY: Float, isMusic: Boolean){

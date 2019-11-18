@@ -10,7 +10,7 @@ import android.os.PowerManager
 import android.content.ContentUris
 import android.util.Log
 import fgapps.com.br.iassistant2.activities.MainActivity
-import fgapps.com.br.iassistant2.utils.MediaPlayerStates
+import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.utils.Utils
 
 class MusicPlayerService : Service(),
