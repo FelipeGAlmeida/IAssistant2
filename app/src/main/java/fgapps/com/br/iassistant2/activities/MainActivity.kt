@@ -49,6 +49,9 @@ class MainActivity : AppCompatActivity(),
     private lateinit var mGestureController: GestureController
     private lateinit var background: ImageView
 
+    private var mButtonHandler: Handler? = null
+    private var mButtonShown: Boolean = false
+
     fun getAppWidth() = background.width
 
     /*** Functions ***/
@@ -140,12 +143,25 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun showButtons() {
-        Animations.fade(this@MainActivity, settings_btn, 300, false)
-        Animations.fade(this@MainActivity, repeat_btn, 300, false)
-        Handler().postDelayed(
+        if(mButtonHandler == null){
+            mButtonHandler = Handler()
+        }
+
+        Animations.fade(this@MainActivity, settings_btn, 300, mButtonShown)
+        Animations.fade(this@MainActivity, repeat_btn, 300, mButtonShown)
+
+        if(mButtonShown) {
+            mButtonShown = false
+            mButtonHandler!!.removeCallbacksAndMessages(null)
+            return
+        }
+
+        mButtonShown = true
+        mButtonHandler!!.postDelayed(
                 {
-                    Animations.fade(this@MainActivity, settings_btn, 300,true)
-                    Animations.fade(this@MainActivity, repeat_btn, 300,true)
+                    Animations.fade(this@MainActivity, settings_btn, 300, mButtonShown)
+                    Animations.fade(this@MainActivity, repeat_btn, 300, mButtonShown)
+                    mButtonShown = false
                 },3200)
     }
 

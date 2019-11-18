@@ -47,6 +47,8 @@ class MusicPlayerService : Service(),
 
     fun play(music: Music?){
 
+        if(playList.size == 0) return //If there's nothing to play, return
+
         if(music != null) { // Plays a specific music
             music_idx = playList.indexOf(music)
         }
