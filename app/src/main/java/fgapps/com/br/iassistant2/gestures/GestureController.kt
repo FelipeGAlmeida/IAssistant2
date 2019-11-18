@@ -15,8 +15,6 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
     private var mActivity: MainActivity = mainActivity
     private var mHandler: Handler? = null
 
-    private var volume = 10
-
     fun setGestureDetector(detector: GestureDetectorCompat){
         mDetector = detector
     }
@@ -77,12 +75,12 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
         if (startY < endY) {
             when(isMusic) {
                 true -> { mActivity.prevMusic() }
-                false-> { volume -= 2; mActivity.volumeChange(Utils.boundVolumeValues(volume)) }
+                false-> { mActivity.volumeChange(Utils.boundVolumeValues(endY, mActivity.getAppHeight())) }
             }
         } else {
             when(isMusic) {
                 true -> { mActivity.nextMusic() }
-                false-> { volume += 2; mActivity.volumeChange(Utils.boundVolumeValues(volume)) }
+                false-> { mActivity.volumeChange(Utils.boundVolumeValues(endY, mActivity.getAppHeight())) }
             }
         }
     }

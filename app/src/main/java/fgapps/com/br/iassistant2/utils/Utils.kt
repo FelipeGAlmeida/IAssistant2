@@ -2,7 +2,6 @@ package fgapps.com.br.iassistant2.utils
 
 import android.widget.Toast
 import fgapps.com.br.iassistant2.activities.MainActivity
-import android.content.DialogInterface
 import androidx.appcompat.app.AlertDialog
 
 
@@ -10,9 +9,12 @@ class Utils {
 
     companion object {
 
-        fun boundVolumeValues(volume: Int) : Int {
-            if(volume > 100) return 100
-            if(volume < 0) return 0
+        fun boundVolumeValues(position: Float, size: Int) : Float {
+            var volume = 1-(position/size)
+
+            if(volume >= 0.85) volume = 1f
+            if(volume <= 0.15) volume = 0f
+
             return volume
         }
 

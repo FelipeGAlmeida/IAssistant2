@@ -49,10 +49,13 @@ class MainActivity : AppCompatActivity(),
     private lateinit var mGestureController: GestureController
     private lateinit var background: ImageView
 
+    private var mVolumeHandler: Handler? = null
+    private var mVolumeShown: Boolean = false
     private var mButtonHandler: Handler? = null
     private var mButtonShown: Boolean = false
 
     fun getAppWidth() = background.width
+    fun getAppHeight() = background.height
 
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +68,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun setBackground() {
+        splashscreen_panel.visibility = View.VISIBLE
         background = background_img
         Glide.with(this)
                 .load(R.drawable.back_anim1)
@@ -113,6 +117,27 @@ class MainActivity : AppCompatActivity(),
         })
     }
 
+    private fun setVolumeViews(volume: Float){
+        volume_txt.text = ((volume*10).toInt()*10).toString()
+
+        val vol_int = (volume * getAppHeight()).toInt()
+        when(vol_int == 0){
+            true -> {
+                mute_img.visibility = View.VISIBLE
+                volume_txt.visibility = View.GONE
+            }
+            false -> {
+                mute_img.visibility = View.GONE
+                volume_txt.visibility = View.VISIBLE
+            }
+        }
+
+        val lp = volume_bar.layoutParams
+        lp.height = vol_int + 50
+        lp.width = (getAppWidth()*0.1).toInt()
+        volume_bar.layoutParams = lp
+    }
+
     private fun loadMusics(){
         val musics = MusicLoader.loadAllMusic(this)
         for (music in musics) {
@@ -137,9 +162,25 @@ class MainActivity : AppCompatActivity(),
         if(mBound) mMusicService.prev()
     }
 
-    override fun volumeChange(volume: Int) {
-        val value: Float = volume/100f
-        if(mBound) mMusicService.setVolume(value)
+    override fun volumeChange(volume: Float) {
+        if(mVolumeHandler == null){
+            mVolumeHandler = Handler()
+        }
+
+        if(mVolumeShown) mVolumeHandler!!.removeCallbacksAndMessages(null)
+        else Animations.fade(this@MainActivity, volume_panel, 300, false)
+
+        mVolumeShown = true
+
+        if(volume > 0) {
+            mVolumeHandler!!.postDelayed({
+                Animations.fade(this@MainActivity, volume_panel, 500, true)
+                mVolumeShown = false
+            }, 1200)
+        }
+
+        setVolumeViews(volume)
+        if(mBound) mMusicService.setVolume(volume)
     }
 
     override fun showButtons() {
