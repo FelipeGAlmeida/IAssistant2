@@ -14,7 +14,6 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.bumptech.glide.Glide
@@ -27,14 +26,14 @@ import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.gestures.GestureController
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.music.MusicLoader
-import fgapps.com.br.iassistant2.music.MusicPlayerService
+import fgapps.com.br.iassistant2.services.MusicPlayerService
 import fgapps.com.br.iassistant2.utils.Animations
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.interfaces.*
+import fgapps.com.br.iassistant2.services.AIService
 import fgapps.com.br.iassistant2.utils.Dimmer
 import fgapps.com.br.iassistant2.utils.Permissions
 import kotlinx.android.synthetic.main.activity_main.*
-import java.text.Normalizer
 
 class MainActivity : AppCompatActivity(),
                     MusicChangeListener,
@@ -48,6 +47,7 @@ class MainActivity : AppCompatActivity(),
     private var mBound: Boolean = false
 
     private lateinit var mDimmer: Dimmer
+    private lateinit var mAI: AIService
 
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
@@ -70,8 +70,6 @@ class MainActivity : AppCompatActivity(),
         setGestures()
         setDimmer()
         setControls()
-
-        Dictionary.init()
     }
 
     private fun setBackground() {
@@ -150,10 +148,15 @@ class MainActivity : AppCompatActivity(),
         mDimmer.init()
     }
 
+    private fun setAI(){
+        Dictionary.init()
+        mAI = AIService(this@MainActivity, mMusicService)
+    }
+
     private fun loadMusics(){
         val musics = MusicLoader.loadAllMusic(this)
         for (music in musics) {
-            Log.v("MUSICS", "music: ${music.name}")
+            Log.v("MUSICS", "MUSIC: ${music.name}")
         }
     }
 
@@ -225,12 +228,12 @@ class MainActivity : AppCompatActivity(),
         else {
             val s = test_edit.text.toString()
 
-            checkAction(s)
+            if(mBound) mAI.checkAction(s)
         }
     }
 
     override fun longPress() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
 
     /*** Media Player response functions ***/
@@ -278,6 +281,8 @@ class MainActivity : AppCompatActivity(),
             mMusicService = binder.getService()
             mMusicService.setMainActivity(this@MainActivity)
             mBound = true
+
+            setAI()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -303,205 +308,5 @@ class MainActivity : AppCompatActivity(),
         super.onStop()
         unbindService(connection) //Unbinds from local service
         mBound = false
-    }
-
-
-    ////////////////// TEST
-
-    fun getPayload(words: MutableList<String>): String{
-        var payload = ""
-        for(word in words)
-            payload += "$word "
-        return payload
-    }
-
-    fun getKeyCommandOf(list: MutableMap<String, ArrayList<String>>, words: MutableList<String>): String?{
-        for(word in words) {
-            for (dicts in list) {
-                for (dict in dicts.value) {
-                    if (word.contains(dict)) {
-                        words.remove(word)
-                        return dicts.key
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    private fun checkAction(raw_command: String) {
-        if(raw_command.isEmpty()) return
-
-        var command = Normalizer.normalize(raw_command.replace("é","ehh"), Normalizer.Form.NFD)
-                .replace(Regex("[^\\p{ASCII}]"), "")
-                .toLowerCase()
-
-        val words = command.split(" ").toMutableList()
-
-        val key_verb = getKeyCommandOf(Dictionary.actions, words)
-        if(key_verb != null){
-            analyseVerb(key_verb, words)
-            return
-        }
-
-        val key_comp = getKeyCommandOf(Dictionary.complements, words)
-        if(key_comp != null){
-            analyseComplement(key_comp, null, words)
-            return
-        }
-
-        val key_extra = getKeyCommandOf(Dictionary.extras, words)
-        if(key_extra != null){
-            analyseExtra(key_extra, null, null)
-            return
-        }
-    }
-
-    fun analyseVerb(key_verb: String, words: MutableList<String>): String? {
-
-        val key_comp = getKeyCommandOf(Dictionary.complements, words)
-        if(key_comp != null){
-            analyseComplement(key_comp, key_verb, words)
-            return null
-        }
-
-        if(words.size == 1) { // Extras is just a word of command, otherwise, is not extras
-            val key_extra = getKeyCommandOf(Dictionary.extras, words)
-            if (key_extra != null) {
-                analyseExtra(key_extra, key_verb, null)
-                return null
-            }
-        }
-
-        when (key_verb) {
-            Dictionary.play -> {
-                if(words.isEmpty()) { // If this is just a PLAY command
-                    if (mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
-                            !mMusicService.isPlaying()) { // if is paused, play again
-                        Toast.makeText(this, "WILL UNPAUSE", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(this, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
-                    }
-                } else{
-                    val pld = getPayload(words)
-                    Toast.makeText(this, "WILL PLAY \"$pld\"", Toast.LENGTH_LONG).show()
-                }
-            }
-            Dictionary.pause -> {
-                if(mMusicService.getPlayerState() == MediaPlayerStates.STARTED &&
-                        mMusicService.isPlaying()){
-                    Toast.makeText(this, "WILL PAUSE", Toast.LENGTH_LONG).show()
-                }
-            }
-            Dictionary.next -> {
-                if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                    Toast.makeText(this, "WILL GO TO NEXT", Toast.LENGTH_LONG).show()
-                }
-            }
-            Dictionary.prev -> {
-                if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                    Toast.makeText(this, "WILL GO TO PREV", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-        return null
-    }
-
-    fun analyseComplement(key_comp: String, key_verb: String?, words: MutableList<String>): String? {
-
-        if(words.size <= 1) { // Extras is just a word of command, otherwise, is not extras
-            val key_extra = getKeyCommandOf(Dictionary.extras, words)
-            if (key_extra != null) {
-                analyseExtra(key_extra, key_verb, key_comp)
-                return null
-            }
-        }
-
-        when (key_comp) {
-            Dictionary.music -> {
-                when(key_verb){
-                    Dictionary.play -> {
-                        if(words.size > 0) { // Still has more words to analyse
-                            val pld = getPayload(words) // May be a Music name
-                            Toast.makeText(this, "WILL PLAY \"$pld\"", Toast.LENGTH_LONG).show()
-                        } else { // If there are no more words
-                            if(mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
-                                    !mMusicService.isPlaying()){
-                                Toast.makeText(this, "WILL UNPAUSE", Toast.LENGTH_LONG).show()
-                            }
-                            // Missing information of what to play
-                            Toast.makeText(this, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
-                        }
-
-                    }
-                    Dictionary.pause -> {
-                        if(mMusicService.getPlayerState() == MediaPlayerStates.STARTED &&
-                                mMusicService.isPlaying()){
-                            Toast.makeText(this, "WILL PAUSE", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    Dictionary.next -> {
-                        if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                            Toast.makeText(this, "WILL GO TO NEXT", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    Dictionary.prev -> {
-                        if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                            Toast.makeText(this, "WILL GO TO PREV", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    null -> {
-                        // May be a Music name
-                        val pld = getPayload(words)
-                        Toast.makeText(this, "WILL PLAY \"$pld\"", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-            Dictionary.folder -> {
-                // May be a Music name
-                val pld = getPayload(words)
-                Toast.makeText(this, "WILL PLAY FOLDER\"$pld\"", Toast.LENGTH_LONG).show()
-            }
-            Dictionary.time -> {
-                if(mMusicService.getPlayerState() == MediaPlayerStates.STARTED &&
-                        mMusicService.isPlaying()){
-                    //pause
-                }
-                Toast.makeText(this, "SAY THE TIME", Toast.LENGTH_LONG).show()
-            }
-        }
-        return null
-    }
-
-    fun analyseExtra(key_extra: String, key_verb: String?, key_comp: String?): String? {
-        when (key_extra) {
-            Dictionary.all -> {
-                Toast.makeText(this, "WILL PLAY ALL THE MUSICS", Toast.LENGTH_LONG).show()
-            }
-            Dictionary.next -> {
-                if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                    Toast.makeText(this, "WILL GO TO NEXT", Toast.LENGTH_LONG).show()
-                }
-            }
-            Dictionary.prev -> {
-                if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                    Toast.makeText(this, "WILL GO TO PREV", Toast.LENGTH_LONG).show()
-                }
-            }
-            Dictionary.time -> {
-                if(mMusicService.getPlayerState() == MediaPlayerStates.STARTED &&
-                        mMusicService.isPlaying()){
-                    //pause
-                }
-                Toast.makeText(this, "SAY THE TIME", Toast.LENGTH_LONG).show()
-            }
-            Dictionary.play -> {
-                if(mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
-                        !mMusicService.isPlaying()){
-                    Toast.makeText(this, "WILL UNPAUSE", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-        return null
     }
 }

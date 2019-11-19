@@ -1,4 +1,4 @@
-package fgapps.com.br.iassistant2.music
+package fgapps.com.br.iassistant2.services
 
 import android.app.Service
 import android.content.Intent
@@ -11,6 +11,8 @@ import android.content.ContentUris
 import android.util.Log
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
+import fgapps.com.br.iassistant2.music.Music
+import fgapps.com.br.iassistant2.music.MusicLoader
 import fgapps.com.br.iassistant2.utils.Utils
 
 class MusicPlayerService : Service(),
@@ -25,7 +27,7 @@ class MusicPlayerService : Service(),
     private var mState = MediaPlayerStates.IDLE
 
     private var playList = ArrayList<Music>()
-    private var playlist_bck = ArrayList<Music>()
+    //private var playlist_bck = ArrayList<Music>()
     private var music_idx = 0
 
     override fun onCreate() {
@@ -47,9 +49,9 @@ class MusicPlayerService : Service(),
 
     fun play(music: Music?){
 
-        if(playList.size == 0) return //If there's nothing to play, return
+        if(playList.size == 0) return //If there's nothing to PLAY, return
 
-        if(music != null) { // Plays a specific music
+        if(music != null) { // Plays a specific MUSIC
             music_idx = playList.indexOf(music)
         }
 
@@ -57,9 +59,9 @@ class MusicPlayerService : Service(),
         setState(MediaPlayerStates.IDLE)
 
         if (music_idx >= playList.size) music_idx = 0
-        val playSong: Music = playList[music_idx] //Get the music
+        val playSong: Music = playList[music_idx] //Get the MUSIC
         val currSong = playSong.id // Get the ID to take the URI
-        val trackUri = ContentUris.withAppendedId( // Get the URI to play the correct file
+        val trackUri = ContentUris.withAppendedId( // Get the URI to PLAY the correct file
                 android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currSong)
 
         try {
@@ -130,7 +132,7 @@ class MusicPlayerService : Service(),
         mMediaPlayer.start()
         setState(MediaPlayerStates.STARTED)
         if(mMainActivity != null) {
-            var indexes = Utils.boundMusicIndexes(playList.size, music_idx)
+            val indexes = Utils.boundMusicIndexes(playList.size, music_idx)
             mMainActivity!!.musicChanged(playList[indexes[0]], playList[indexes[1]], playList[indexes[2]])
         }
     }

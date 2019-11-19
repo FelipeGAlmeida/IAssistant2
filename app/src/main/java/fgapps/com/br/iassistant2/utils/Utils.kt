@@ -1,8 +1,6 @@
 package fgapps.com.br.iassistant2.utils
 
-import android.widget.Toast
-import fgapps.com.br.iassistant2.activities.MainActivity
-import androidx.appcompat.app.AlertDialog
+import java.util.*
 
 
 class Utils {
@@ -28,15 +26,24 @@ class Utils {
             return intArrayOf(curr, prev, next)
         }
 
-        fun showAlertDialog(mainActivity: MainActivity, title: String, message: String){
-            val builder = AlertDialog.Builder(mainActivity)
-            builder.setTitle("Titulo")
-            builder.setMessage("Qualifique este software")
-            builder.setPositiveButton("Yes") { arg0, arg1 -> Toast.makeText(mainActivity, "positivo=$arg1", Toast.LENGTH_SHORT).show() }
-            builder.setNegativeButton("No") { arg0, arg1 -> Toast.makeText(mainActivity, "negativo=$arg1", Toast.LENGTH_SHORT).show() }
-            val alert = builder.create()
-            alert.show()
+        fun getCurrentTime(): String{
+            val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+            val m = Calendar.getInstance().get(Calendar.MINUTE)
+            val h_zero = if(h<10) "0" else ""
+            val m_zero = if(m<10) "0" else ""
+
+            return "$h_zero$h:$m_zero$m"
         }
+
+//        fun showAlertDialog(mainActivity: MainActivity, title: String, message: String){
+//            val builder = AlertDialog.Builder(mainActivity)
+//            builder.setTitle("Titulo")
+//            builder.setMessage("Qualifique este software")
+//            builder.setPositiveButton("Yes") { arg0, arg1 -> Toast.makeText(mainActivity, "positivo=$arg1", Toast.LENGTH_SHORT).show() }
+//            builder.setNegativeButton("No") { arg0, arg1 -> Toast.makeText(mainActivity, "negativo=$arg1", Toast.LENGTH_SHORT).show() }
+//            val alert = builder.create()
+//            alert.show()
+//        }
     }
 
 }
