@@ -112,8 +112,12 @@ class MusicPlayerService : Service(),
         mMediaPlayer.setVolume(value, value)
     }
 
-    fun isPlaying(): Boolean{
+    fun isPlaying(): Boolean {
         return mMediaPlayer.isPlaying
+    }
+
+    fun getPlayerState(): MediaPlayerStates {
+        return mState
     }
 
     /*** Media Player service functions ***/
