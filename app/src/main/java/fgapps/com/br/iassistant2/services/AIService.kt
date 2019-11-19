@@ -4,6 +4,7 @@ import android.widget.Toast
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
+import fgapps.com.br.iassistant2.music.MusicLoader
 import fgapps.com.br.iassistant2.utils.Utils
 import java.text.Normalizer
 
@@ -15,9 +16,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
     fun checkAction(raw_command: String) {
         if(raw_command.isEmpty()) return
 
-        val command = Normalizer.normalize(raw_command.replace("é","ehh"), Normalizer.Form.NFD)
-                .replace(Regex("[^\\p{ASCII}]"), "")
-                .toLowerCase()
+        val command = Utils.normalizeStrings(raw_command, true, true, false)
 
         val words = command.split(" ").toMutableList()
 
@@ -67,7 +66,8 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                     }
                 } else{
                     val pld = getPayload(words)
-                    Toast.makeText(mActivity, "WILL PLAY \"$pld\"", Toast.LENGTH_LONG).show()
+                    mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.MUSIC))
+                    if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
                 }
             }
             Dictionary.PAUSE -> {
@@ -106,7 +106,8 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                     Dictionary.PLAY -> {
                         if(words.size > 0) { // Still has more words to analyse
                             val pld = getPayload(words) // May be a Music name
-                            Toast.makeText(mActivity, "WILL PLAY \"$pld\"", Toast.LENGTH_LONG).show()
+                            mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.MUSIC))
+                            if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
                         } else { // If there are no more words
                             if(mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
                                     !mMusicService.isPlaying()){
@@ -136,14 +137,16 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                     null -> {
                         // May be a Music name
                         val pld = getPayload(words)
-                        Toast.makeText(mActivity, "WILL PLAY \"$pld\"", Toast.LENGTH_LONG).show()
+                        mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.MUSIC))
+                        if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
                     }
                 }
             }
             Dictionary.FOLDER -> {
                 // May be a Music name
                 val pld = getPayload(words)
-                Toast.makeText(mActivity, "WILL PLAY FOLDER\"$pld\"", Toast.LENGTH_LONG).show()
+                mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.FOLDER))
+                if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
             }
             Dictionary.TIME -> {
                 if(mMusicService.getPlayerState() == MediaPlayerStates.STARTED &&
@@ -159,7 +162,8 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
     private fun analyseExtra(key_extra: String) {
         when (key_extra) {
             Dictionary.ALL -> {
-                Toast.makeText(mActivity, "WILL PLAY ALL THE MUSICS", Toast.LENGTH_LONG).show()
+                mMusicService.setPlaylist(MusicLoader.allMusic)
+                if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
             }
             Dictionary.NEXT -> {
                 if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {

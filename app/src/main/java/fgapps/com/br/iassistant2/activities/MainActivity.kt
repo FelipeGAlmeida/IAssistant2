@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.bumptech.glide.Glide
@@ -83,11 +84,11 @@ class MainActivity : AppCompatActivity(),
                     }
 
                     override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
+                        if(Permissions.checkPermission(this@MainActivity,
+                                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                                        Permissions.READ_EXTERNAL_STORAGE_CODE)) MusicLoader.loadAllMusic(this@MainActivity)
                         Handler().postDelayed({
                             Animations.fade(this@MainActivity, splashscreen_panel, 800, true)
-                            if(Permissions.checkPermission(this@MainActivity,
-                                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                                    Permissions.READ_EXTERNAL_STORAGE_CODE)) loadMusics()
                         }, 800)
                         return false
                     }
@@ -116,7 +117,8 @@ class MainActivity : AppCompatActivity(),
             override fun onClick(p0: View?) {
                 if(mBound)
                     if(mMusicService.isPlaying()) mMusicService.pause()
-                    else mMusicService.play()
+                    else if(!mMusicService.play())
+                        Toast.makeText(this@MainActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
             }
 
         })
@@ -151,13 +153,6 @@ class MainActivity : AppCompatActivity(),
     private fun setAI(){
         Dictionary.init()
         mAI = AIService(this@MainActivity, mMusicService)
-    }
-
-    private fun loadMusics(){
-        val musics = MusicLoader.loadAllMusic(this)
-        for (music in musics) {
-            Log.v("MUSICS", "MUSIC: ${music.name}")
-        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -237,7 +232,6 @@ class MainActivity : AppCompatActivity(),
     }
 
     /*** Media Player response functions ***/
-
     override fun stateChanged(state: MediaPlayerStates) {
         Animations.stopBlink()
         when(state){
@@ -254,9 +248,16 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun musicChanged(curr: Music, prev: Music, next: Music) {
-        prevSong_txt.text = prev.name
         currentSong_txt.text = curr.name
-        nextSong_txt.text = next.name
+        if(curr.name == prev.name){
+            prevSong_txt.visibility = View.GONE
+            nextSong_txt.visibility = View.GONE
+        }else {
+            prevSong_txt.visibility = View.VISIBLE
+            nextSong_txt.visibility = View.VISIBLE
+            prevSong_txt.text = prev.name
+            nextSong_txt.text = next.name
+        }
     }
 
     /*** Request permission Callback ***/
@@ -264,7 +265,7 @@ class MainActivity : AppCompatActivity(),
         when(requestCode){
             Permissions.READ_EXTERNAL_STORAGE_CODE -> {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    loadMusics()
+                    MusicLoader.loadAllMusic(this@MainActivity)
                 } else {
                     this.finishAndRemoveTask() //Can't proceed without this permission
                 }

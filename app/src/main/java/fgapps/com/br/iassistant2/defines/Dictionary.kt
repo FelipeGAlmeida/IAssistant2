@@ -38,7 +38,7 @@ class Dictionary {
             actions[PREV] = a_prev
 
             val a_time = arrayListOf("sao", "ehh")
-            a_time += arrayListOf("is")
+            a_time += arrayListOf("is it")
             actions[TIME] = a_time
 
             /* ***** Complements ***** */

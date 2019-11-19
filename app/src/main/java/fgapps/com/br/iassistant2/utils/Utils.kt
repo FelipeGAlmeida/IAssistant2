@@ -1,5 +1,6 @@
 package fgapps.com.br.iassistant2.utils
 
+import java.text.Normalizer
 import java.util.*
 
 
@@ -24,6 +25,36 @@ class Utils {
             if(next > size-1) next = 0
 
             return intArrayOf(curr, prev, next)
+        }
+
+        fun normalizeStrings(raw_string: String,
+                             accents: Boolean,
+                             lowerCase: Boolean,
+                             conjunctions: Boolean): String{
+            var string = raw_string
+
+            /*** specific corrections ***/
+            string = string
+                    .replace("é", "ehh")
+                    .replace("&", "e")
+
+            if(conjunctions) {
+                string = string
+                        .replace(" da", "")
+                        .replace(" de", "")
+                        .replace(" do", "")
+            }
+
+            /*** accents correction ***/
+            if(accents) {
+                string = Normalizer.normalize(string, Normalizer.Form.NFD)
+                        .replace(Regex("[^\\p{ASCII}]"), "")
+            }
+
+            /*** lowerCase correction ***/
+            if(lowerCase) string = string.toLowerCase()
+
+            return string
         }
 
         fun getCurrentTime(): String{
