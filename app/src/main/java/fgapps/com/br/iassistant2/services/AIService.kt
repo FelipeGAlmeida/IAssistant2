@@ -14,6 +14,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
 
     private var isWaitingPayload = false
     private var isFolderFromPayload = false
+    private var isJumpingPayload = false
     private var shouldAddPayload = false
 
     fun checkCommand(raw_command: String) {
@@ -22,9 +23,10 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         val command = Utils.normalizeStrings(raw_command, true, true, false)
 
         if(isWaitingPayload){
-            analysePayload(command, isFolderFromPayload, shouldAddPayload)
+            analysePayload(command, isFolderFromPayload, shouldAddPayload, isJumpingPayload)
             isWaitingPayload = false
             isFolderFromPayload = false
+            isJumpingPayload = false
             shouldAddPayload = false
             return
         }
@@ -67,6 +69,15 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         }
 
         when (key_verb) {
+            Dictionary.GOTO -> {
+                if(words.isEmpty()){
+                    Toast.makeText(mActivity, "WHICH MUSIC YOU WANT TO JUMP TO?", Toast.LENGTH_LONG).show()
+                    isWaitingPayload = true
+                    isJumpingPayload = true
+                } else {
+                    playSpecificSong(getPayload(words))
+                }
+            }
             Dictionary.PLAY -> {
                 if(words.isEmpty()) { // If verb is just a PLAY command
                     if (mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
@@ -122,6 +133,15 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         when (key_comp) {
             Dictionary.MUSIC -> {
                 when(key_verb){
+                    Dictionary.GOTO -> {
+                        if(words.isEmpty()){
+                            Toast.makeText(mActivity, "WHICH MUSIC YOU WANT TO JUMP TO?", Toast.LENGTH_LONG).show()
+                            isWaitingPayload = true
+                            isJumpingPayload = true
+                        } else {
+                            playSpecificSong(getPayload(words))
+                        }
+                    }
                     Dictionary.PLAY -> {
                         if(words.size > 0) { // Still has more words to analyse
                             addMusicsFromPayloadAndPlay(getPayload(words), false, false)
@@ -233,17 +253,37 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         return
     }
 
-    private fun analysePayload(payload: String, fromFolder: Boolean, shouldAdd: Boolean){
+    private fun analysePayload(payload: String, fromFolder: Boolean, shouldAdd: Boolean, isJump: Boolean){
+        if(isJump){
+            playSpecificSong(payload)
+            return
+        }
+
         var isFolder = fromFolder
         if(!isFolder) { //If is not from folder command, we check to be sure about to be
             val folder_keys = Dictionary.complements[Dictionary.FOLDER]
             for (dict in folder_keys!!) {
-                if (payload.contains(dict)) isFolder = true
+                if (payload.contains(dict)){
+                    payload.replace(dict, "").trim()
+                    isFolder = true
+                    break
+                }
             }
         }
 
         addMusicsFromPayloadAndPlay(payload, isFolder, shouldAdd)
+    }
 
+    private fun playSpecificSong(payload: String){
+        for(musicToGo in MusicLoader.getPlaylistFromPayload(payload, false)){
+            val indexToGo = mMusicService.checkIndexInPlaylist(musicToGo)
+            if(indexToGo >= 0){
+                mMusicService.play(indexToGo)
+                return
+            }
+        }
+        // If no music was found
+        Toast.makeText(mActivity, "MUSIC IS NOT IN THE PLAYLIST", Toast.LENGTH_LONG).show()
     }
 
     private fun addMusicsFromPayloadAndPlay(payload: String, isFolder: Boolean, shouldAdd: Boolean){
@@ -257,10 +297,12 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                 mMusicService.play()
             }
         }
-        else Toast.makeText(mActivity, "NOTHING MATCHES WITH YOU WANT", Toast.LENGTH_LONG).show()
+        else Toast.makeText(mActivity, "NOTHING MATCHES WHAT YOU WANT", Toast.LENGTH_LONG).show()
     }
 
     private fun getPayload(words: MutableList<String>): String {
+        if(words.size == 1) return words[0]
+
         var payload = ""
         for(word in words)
             payload += "$word "

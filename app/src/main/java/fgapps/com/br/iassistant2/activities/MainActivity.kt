@@ -231,15 +231,13 @@ class MainActivity : AppCompatActivity(),
     override fun stateChanged(state: MediaPlayerStates) {
         Animations.stopBlink()
         when(state){
-            MediaPlayerStates.PREPARING -> {}
             MediaPlayerStates.STARTED -> {
                 Animations.fade(this@MainActivity, music_panel, 500, false)
             }
             MediaPlayerStates.PAUSED -> {
                 Animations.blink(this@MainActivity, music_panel, 800)
             }
-            MediaPlayerStates.IDLE -> {}
-
+            else -> {}
         }
     }
 

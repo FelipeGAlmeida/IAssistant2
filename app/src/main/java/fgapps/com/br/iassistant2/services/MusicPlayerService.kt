@@ -46,12 +46,12 @@ class MusicPlayerService : Service(),
         mMediaPlayer.setOnErrorListener(this)
     }
 
-    fun play(music: Music?) {
+    fun play(idx_toPlay: Int?) {
 
         if(mPlaylist.size == 0) return //If there's nothing to PLAY, return
 
-        if(music != null) { // Plays a specific MUSIC
-            music_idx = mPlaylist.indexOf(music)
+        if(idx_toPlay != null) { // Plays a specific MUSIC
+            music_idx = idx_toPlay
         }
 
         mMediaPlayer.reset()
@@ -76,6 +76,7 @@ class MusicPlayerService : Service(),
 
     fun setPlaylist(playlist: ArrayList<Music>) {
         mPlaylist = playlist
+        setState(MediaPlayerStates.IDLE) // If we set the Playlist, we need to restart the player
     }
 
     fun addToPlaylist(playlist: ArrayList<Music>) {
@@ -85,6 +86,10 @@ class MusicPlayerService : Service(),
             }
         }
         notifyMusicChanges()
+    }
+
+    fun checkIndexInPlaylist(music: Music): Int{
+        return mPlaylist.indexOf(music)
     }
 
     /*** Player controls ***/

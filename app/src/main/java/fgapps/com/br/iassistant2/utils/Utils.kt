@@ -37,6 +37,11 @@ class Utils {
             string = string
                     .replace("é", "ehh")
                     .replace("&", "e")
+                    //Commands with composed actions
+                    .replace("ir para", "ir_para")
+                    .replace("pular para", "pular_para")
+                    .replace("go to", "go_to")
+                    .replace("jump to", "jump_to")
 
             if(conjunctions) {
                 string = string
