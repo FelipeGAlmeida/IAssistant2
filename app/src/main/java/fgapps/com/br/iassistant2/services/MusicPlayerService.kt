@@ -79,7 +79,11 @@ class MusicPlayerService : Service(),
     }
 
     fun addToPlaylist(playlist: ArrayList<Music>) {
-        mPlaylist.addAll(playlist)
+        for(music in playlist){
+            if(!mPlaylist.contains(music)){
+                mPlaylist.add(music)
+            }
+        }
         notifyMusicChanges()
     }
 

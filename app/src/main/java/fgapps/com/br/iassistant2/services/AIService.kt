@@ -12,10 +12,22 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
     private val mActivity = mainActivity
     private val mMusicService = musicService
 
-    fun checkAction(raw_command: String) {
+    private var isWaitingPayload = false
+    private var isFolderFromPayload = false
+    private var shouldAddPayload = false
+
+    fun checkCommand(raw_command: String) {
         if(raw_command.isEmpty()) return
 
         val command = Utils.normalizeStrings(raw_command, true, true, false)
+
+        if(isWaitingPayload){
+            analysePayload(command, isFolderFromPayload, shouldAddPayload)
+            isWaitingPayload = false
+            isFolderFromPayload = false
+            shouldAddPayload = false
+            return
+        }
 
         val words = command.split(" ").toMutableList()
 
@@ -62,9 +74,10 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                         mMusicService.play()
                     } else {
                         Toast.makeText(mActivity, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
+                        isWaitingPayload = true
                     }
                 } else{
-                    addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, false)
+                    addMusicsFromPayloadAndPlay(getPayload(words), false, false)
                 }
             }
             Dictionary.PAUSE -> {
@@ -74,7 +87,13 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                 }
             }
             Dictionary.ADD -> {
-                addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, true)
+                if(words.isEmpty()){
+                    Toast.makeText(mActivity, "WHAT TO ADD?", Toast.LENGTH_LONG).show()
+                    isWaitingPayload = true
+                    shouldAddPayload = true
+                } else {
+                    addMusicsFromPayloadAndPlay(getPayload(words), false, true)
+                }
             }
             Dictionary.NEXT -> {
                 if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
@@ -105,14 +124,14 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                 when(key_verb){
                     Dictionary.PLAY -> {
                         if(words.size > 0) { // Still has more words to analyse
-                            addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, false)
+                            addMusicsFromPayloadAndPlay(getPayload(words), false, false)
                         } else { // If there are no more words
                             if(mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
                                     !mMusicService.isPlaying()){
                                 mMusicService.play()
                             }
-                            // Missing information of what to PLAY
                             Toast.makeText(mActivity, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
+                            isWaitingPayload = true
                         }
 
                     }
@@ -123,7 +142,13 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                         }
                     }
                     Dictionary.ADD -> {
-                        addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, true)
+                        if(words.isEmpty()){
+                            Toast.makeText(mActivity, "WHAT TO ADD?", Toast.LENGTH_LONG).show()
+                            isWaitingPayload = true
+                            shouldAddPayload = true
+                        } else {
+                            addMusicsFromPayloadAndPlay(getPayload(words), false, true)
+                        }
                     }
                     Dictionary.NEXT -> {
                         if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
@@ -137,17 +162,30 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                     }
                     null -> {
                         // May be a Music name
-                        addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, false)
+                        addMusicsFromPayloadAndPlay(getPayload(words), false, false)
                     }
                 }
             }
             Dictionary.FOLDER -> {
                 when(key_verb){
                     Dictionary.ADD -> {
-                        addMusicsFromPayloadandPlay(words, Dictionary.FOLDER, true)
+                        if(words.isEmpty()){
+                            Toast.makeText(mActivity, "WHICH FOLDER TO ADD?", Toast.LENGTH_LONG).show()
+                            isWaitingPayload = true
+                            isFolderFromPayload = true
+                            shouldAddPayload = true
+                        } else {
+                            addMusicsFromPayloadAndPlay(getPayload(words), true, true)
+                        }
                     }
                     else -> {
-                        addMusicsFromPayloadandPlay(words, Dictionary.FOLDER, false)
+                        if(words.isEmpty()){
+                            Toast.makeText(mActivity, "WHICH FOLDER TO PLAY?", Toast.LENGTH_LONG).show()
+                            isWaitingPayload = true
+                            isFolderFromPayload = true
+                        } else {
+                            addMusicsFromPayloadAndPlay(getPayload(words), true, false)
+                        }
                     }
                 }
             }
@@ -195,9 +233,23 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         return
     }
 
-    private fun addMusicsFromPayloadandPlay(words: MutableList<String>, type: String, shouldAdd: Boolean){
-        val pld = getPayload(words)
-        val playlist = MusicLoader.getPlaylistFromPayload(pld, type)
+    private fun analysePayload(payload: String, fromFolder: Boolean, shouldAdd: Boolean){
+        var isFolder = fromFolder
+        if(!isFolder) { //If is not from folder command, we check to be sure about to be
+            val folder_keys = Dictionary.complements[Dictionary.FOLDER]
+            for (dict in folder_keys!!) {
+                if (payload.contains(dict)) isFolder = true
+            }
+        }
+
+        addMusicsFromPayloadAndPlay(payload, isFolder, shouldAdd)
+
+    }
+
+    private fun addMusicsFromPayloadAndPlay(payload: String, isFolder: Boolean, shouldAdd: Boolean){
+        if(!hasMusics()) return //Check if there are musics to be played
+
+        val playlist = MusicLoader.getPlaylistFromPayload(payload, isFolder)
         if(!playlist.isEmpty()){
             if(shouldAdd) mMusicService.addToPlaylist(playlist)
             else {
@@ -227,5 +279,15 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
             }
         }
         return null
+    }
+
+    private fun hasMusics(): Boolean{
+        return when(MusicLoader.allMusic.size > 0){
+            true -> true
+            false -> {
+                Toast.makeText(mActivity, "NO MUSICS ON THE PHONE", Toast.LENGTH_LONG).show()
+                false
+            }
+        }
     }
 }

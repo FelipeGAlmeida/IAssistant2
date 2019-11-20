@@ -12,7 +12,6 @@ class MusicLoader {
     companion object {
 
         var allMusic: ArrayList<Music> = ArrayList()
-        var n_allMusic = 0
 
         /* ***** Load all the musics in the phone ***** */
         fun loadAllMusic(context: Context) {
@@ -48,30 +47,24 @@ class MusicLoader {
                 }while(musicCursor.moveToNext())
 
                 musicCursor.close()
-                n_allMusic = allMusic.size
             }
         }
 
         /* ***** Get a playlist based on specific input ***** */
-        fun getPlaylistFromPayload(payload: String, type: String): ArrayList<Music>{
+        fun getPlaylistFromPayload(payload: String, isFolder: Boolean): ArrayList<Music>{
             val playlist = ArrayList<Music>()
             for(music in allMusic){
 
-                var source = Dictionary.MUSIC
-                when(type){
-                    Dictionary.MUSIC -> {
-                        source = music.name
-                    }
-                    Dictionary.FOLDER -> {
-                        source = music.folder
-                    }
+                val source = when(isFolder){
+                    false -> music.name
+                    true -> music.folder
                 }
 
                 if(match(source, payload))
                     playlist.add(music)
             }
 
-            if(type == Dictionary.MUSIC && playlist.isEmpty()){
+            if(!isFolder && playlist.isEmpty()){
                 sortPlaylist(playlist, payload)
             }
 

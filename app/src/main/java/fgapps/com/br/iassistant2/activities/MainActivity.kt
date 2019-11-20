@@ -10,11 +10,9 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.bumptech.glide.Glide
@@ -221,7 +219,7 @@ class MainActivity : AppCompatActivity(),
         else {
             val s = test_edit.text.toString()
 
-            if(mBound) mAI.checkAction(s)
+            if(mBound) mAI.checkCommand(s)
         }
     }
 
