@@ -254,8 +254,9 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
     }
 
     private fun analysePayload(payload: String, fromFolder: Boolean, shouldAdd: Boolean, isJump: Boolean){
+        var mutablePayload = payload
         if(isJump){
-            playSpecificSong(payload)
+            playSpecificSong(mutablePayload)
             return
         }
 
@@ -263,15 +264,15 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         if(!isFolder) { //If is not from folder command, we check to be sure about to be
             val folder_keys = Dictionary.complements[Dictionary.FOLDER]
             for (dict in folder_keys!!) {
-                if (payload.contains(dict)){
-                    payload.replace(dict, "").trim()
+                if (mutablePayload.contains(dict)){
+                    mutablePayload = mutablePayload.replace(dict, "").trim()
                     isFolder = true
                     break
                 }
             }
         }
 
-        addMusicsFromPayloadAndPlay(payload, isFolder, shouldAdd)
+        addMusicsFromPayloadAndPlay(mutablePayload, isFolder, shouldAdd)
     }
 
     private fun playSpecificSong(payload: String){

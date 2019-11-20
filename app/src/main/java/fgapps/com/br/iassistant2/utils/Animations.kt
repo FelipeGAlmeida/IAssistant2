@@ -44,7 +44,7 @@ class Animations {
 
                 override fun onAnimationEnd(animation: Animation?) {
                     if(fadeout) {
-                        view.visibility = View.GONE
+                        view.visibility = View.INVISIBLE
                     }
                 }
 

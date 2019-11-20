@@ -1,5 +1,9 @@
 package fgapps.com.br.iassistant2.utils
 
+import android.content.Context
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import fgapps.com.br.iassistant2.activities.MainActivity
 import java.text.Normalizer
 import java.util.*
 
@@ -69,6 +73,15 @@ class Utils {
             val m_zero = if(m<10) "0" else ""
 
             return "$h_zero$h:$m_zero$m"
+        }
+
+        fun enableKeyboard(mainActivity: MainActivity, enable: Boolean, view: View){
+            val imm = mainActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            when(enable) {
+                false -> imm?.hideSoftInputFromWindow(view.windowToken, 0)
+                true -> imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+            }
+            view.requestFocus()
         }
 
 //        fun showAlertDialog(mainActivity: MainActivity, title: String, message: String){

@@ -10,6 +10,10 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -32,6 +36,7 @@ import fgapps.com.br.iassistant2.interfaces.*
 import fgapps.com.br.iassistant2.services.AIService
 import fgapps.com.br.iassistant2.utils.Dimmer
 import fgapps.com.br.iassistant2.utils.Permissions
+import fgapps.com.br.iassistant2.utils.Utils
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),
@@ -59,6 +64,8 @@ class MainActivity : AppCompatActivity(),
     private var mVolumeShown: Boolean = false
     private var mButtonHandler: Handler? = null
     private var mButtonShown: Boolean = false
+    private var mEditHandler: Handler? = null
+    private var mEditShown: Boolean = false
 
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,6 +110,29 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun setControls(){
+        command_edit.addTextChangedListener(object: TextWatcher{
+            override fun afterTextChanged(p0: Editable?) {}
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                if(p0 != null && p0.toString() != "")
+                    this@MainActivity.longPress()
+            }
+
+        })
+
+        command_btn.setOnClickListener(object: View.OnClickListener{
+            override fun onClick(p0: View?) {
+                mAI.checkCommand(command_edit.text.toString())
+                command_edit.setText("")
+                Utils.enableKeyboard(this@MainActivity, false, command_edit)
+                mEditHandler!!.removeCallbacksAndMessages(null)
+                Animations.fade(this@MainActivity, typeCommand_panel, 300, true)
+                mEditShown = false
+            }
+        })
+
         settings_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
                 val intent = Intent(this@MainActivity, SettingsActivity::class.java)
@@ -218,14 +248,30 @@ class MainActivity : AppCompatActivity(),
     override fun singlePress() {
         if(mDimmer.isDimmeredDown()) mDimmer.up()
         else {
-            val s = test_edit.text.toString()
-
-            if(mBound) mAI.checkCommand(s)
+            // Should init the Voice Recognition
         }
     }
 
     override fun longPress() {
+        if(mDimmer.isDimmeredDown()) mDimmer.up()
 
+        if(mEditHandler == null){
+            mEditHandler = Handler()
+        }
+
+        if(!mEditShown){
+            Animations.fade(this@MainActivity, typeCommand_panel, 300, false)
+            Utils.enableKeyboard(this@MainActivity, true, command_edit)
+            mEditShown = true
+        } else mEditHandler!!.removeCallbacksAndMessages(null)
+
+        mEditHandler!!.postDelayed(
+                {
+                    Animations.fade(this@MainActivity, typeCommand_panel, 300, true)
+                    Utils.enableKeyboard(this@MainActivity, false, command_edit)
+                    command_edit.setText("")
+                    mEditShown = false
+                }, 5200)
     }
 
     /*** Media Player response functions ***/

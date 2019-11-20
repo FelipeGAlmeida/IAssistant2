@@ -8,7 +8,7 @@ class Dimmer(mainActivity: MainActivity) {
     private val mMainActivity = mainActivity
     private var mTimer: Timer = Timer()
 
-    private var mIdleTime = 15
+    private var mIdleTime = 35
 
     fun init(){
         mTimer.scheduleAtFixedRate(mTimerTask, 0, 1000) //Verify if has to Dimmer each second
@@ -39,7 +39,7 @@ class Dimmer(mainActivity: MainActivity) {
         attributes.screenBrightness = -1f
         mMainActivity.runOnUiThread{
             mMainActivity.window.attributes = attributes
-            mIdleTime = 15
+            mIdleTime = 35
         }
     }
 }
