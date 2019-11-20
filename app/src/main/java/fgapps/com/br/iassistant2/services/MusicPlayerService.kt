@@ -13,6 +13,7 @@ import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.utils.Utils
+import java.util.*
 
 class MusicPlayerService : Service(),
         MediaPlayer.OnPreparedListener,
@@ -24,9 +25,10 @@ class MusicPlayerService : Service(),
     private lateinit var mMediaPlayer: MediaPlayer
     private var mMainActivity: MainActivity? = null
     private var mState = MediaPlayerStates.IDLE
+    private var mShuffle = false
 
     private var mPlaylist = ArrayList<Music>()
-    //private var playlist_bck = ArrayList<Music>()
+    private var mPlaylist_bck = ArrayList<Music>()
     private var music_idx = 0
 
     override fun onCreate() {
@@ -76,6 +78,7 @@ class MusicPlayerService : Service(),
 
     fun setPlaylist(playlist: ArrayList<Music>) {
         mPlaylist = playlist
+        mShuffle = false
         setState(MediaPlayerStates.IDLE) // If we set the Playlist, we need to restart the player
     }
 
@@ -84,6 +87,10 @@ class MusicPlayerService : Service(),
             if(!mPlaylist.contains(music)){
                 mPlaylist.add(music)
             }
+        }
+        if(mShuffle){
+            mShuffle = false
+            shuffle() // Re-shuffle with the new musics added
         }
         notifyMusicChanges()
     }
@@ -128,6 +135,26 @@ class MusicPlayerService : Service(),
 
     fun setVolume(value: Float) {
         mMediaPlayer.setVolume(value, value)
+    }
+
+    fun shuffle(){
+        val music = mPlaylist[music_idx]
+        mShuffle = !mShuffle
+        music_idx = when(mShuffle){
+            true -> {
+                mPlaylist_bck.addAll(mPlaylist)
+                mPlaylist.shuffle()
+                mPlaylist.remove(music)
+                mPlaylist.add(0, music)
+                0
+            }
+            false ->{
+                mPlaylist.clear()
+                mPlaylist.addAll(mPlaylist_bck)
+                mPlaylist.indexOf(music)
+            }
+        }
+        notifyMusicChanges()
     }
 
     fun isPlaying(): Boolean {

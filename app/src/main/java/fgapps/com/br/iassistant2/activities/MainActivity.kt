@@ -113,8 +113,9 @@ class MainActivity : AppCompatActivity(),
 
         repeat_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
-                if(mBound)
-                    if(mMusicService.isPlaying()) mMusicService.pause()
+                if(mBound) {
+                    mMusicService.shuffle()
+                }
             }
 
         })
