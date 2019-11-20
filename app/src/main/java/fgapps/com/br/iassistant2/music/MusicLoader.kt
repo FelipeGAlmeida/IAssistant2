@@ -12,6 +12,7 @@ class MusicLoader {
     companion object {
 
         var allMusic: ArrayList<Music> = ArrayList()
+        var n_allMusic = 0
 
         /* ***** Load all the musics in the phone ***** */
         fun loadAllMusic(context: Context) {
@@ -47,9 +48,11 @@ class MusicLoader {
                 }while(musicCursor.moveToNext())
 
                 musicCursor.close()
+                n_allMusic = allMusic.size
             }
         }
 
+        /* ***** Get a playlist based on specific input ***** */
         fun getPlaylistFromPayload(payload: String, type: String): ArrayList<Music>{
             val playlist = ArrayList<Music>()
             for(music in allMusic){
@@ -68,15 +71,37 @@ class MusicLoader {
                     playlist.add(music)
             }
 
-            if(type == Dictionary.MUSIC){
-                sortPlaylist(playlist)
+            if(type == Dictionary.MUSIC && playlist.isEmpty()){
+                sortPlaylist(playlist, payload)
             }
 
             return playlist
         }
 
-        fun sortPlaylist(playlist: ArrayList<Music>){
-            //sort playlist in most match order
+        fun sortPlaylist(playlist: ArrayList<Music>, payload: String){
+            val words = payload.split(" ")
+            val n_music = allMusic.size
+            val max_match = words.size
+            val matches = IntArray(n_music)
+            for (i in 0 until n_music) {
+                val s = allMusic.get(i)
+                for (word in words) {
+                    if (match(s.name, word) || match(s.artist, word) || match(s.title, word)) {
+                        matches[i]++
+                    }
+                }
+            }
+
+            for (i in matches.indices) {
+                if (matches[i] == max_match) { // We check if was a max match
+                    if (!playlist.contains(allMusic[i]))
+                        playlist.add(0, allMusic[i]) // Then we put in the beginning
+                } else if(matches[i] == max_match - 1 &&
+                        max_match > 2){ // Nearly max matches are allowed too
+                    if (!playlist.contains(allMusic[i]))
+                        playlist.add(allMusic[i]) // Else, we put in the end
+                }
+            }
         }
 
         private fun match(raw_source: String, raw_match: String): Boolean {
@@ -91,7 +116,8 @@ class MusicLoader {
             val source_char = source.toCharArray()
             val match_char = match.toCharArray()
 
-            if (source_char[0] != match_char[0]) { // If the start are not equals, the rest isn't too
+            if (source_char[0] != match_char[0] || // If the start are not equals, the rest isn't too
+                    match.length < 3) {            // If the source is too small, should not be
                 return false
             }
 

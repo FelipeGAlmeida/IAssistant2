@@ -6,7 +6,6 @@ import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.music.MusicLoader
 import fgapps.com.br.iassistant2.utils.Utils
-import java.text.Normalizer
 
 class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
 
@@ -65,9 +64,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                         Toast.makeText(mActivity, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
                     }
                 } else{
-                    val pld = getPayload(words)
-                    mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.MUSIC))
-                    if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
+                    addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, false)
                 }
             }
             Dictionary.PAUSE -> {
@@ -75,6 +72,9 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                         mMusicService.isPlaying()){
                     mMusicService.pause()
                 }
+            }
+            Dictionary.ADD -> {
+                addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, true)
             }
             Dictionary.NEXT -> {
                 if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
@@ -105,9 +105,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                 when(key_verb){
                     Dictionary.PLAY -> {
                         if(words.size > 0) { // Still has more words to analyse
-                            val pld = getPayload(words) // May be a Music name
-                            mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.MUSIC))
-                            if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
+                            addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, false)
                         } else { // If there are no more words
                             if(mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
                                     !mMusicService.isPlaying()){
@@ -124,6 +122,9 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                             mMusicService.pause()
                         }
                     }
+                    Dictionary.ADD -> {
+                        addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, true)
+                    }
                     Dictionary.NEXT -> {
                         if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
                             mMusicService.next()
@@ -136,17 +137,19 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
                     }
                     null -> {
                         // May be a Music name
-                        val pld = getPayload(words)
-                        mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.MUSIC))
-                        if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
+                        addMusicsFromPayloadandPlay(words, Dictionary.MUSIC, false)
                     }
                 }
             }
             Dictionary.FOLDER -> {
-                // May be a Music name
-                val pld = getPayload(words)
-                mMusicService.setPlaylist(MusicLoader.getPlaylistFromPayload(pld, Dictionary.FOLDER))
-                if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
+                when(key_verb){
+                    Dictionary.ADD -> {
+                        addMusicsFromPayloadandPlay(words, Dictionary.FOLDER, true)
+                    }
+                    else -> {
+                        addMusicsFromPayloadandPlay(words, Dictionary.FOLDER, false)
+                    }
+                }
             }
             Dictionary.TIME -> {
                 if(mMusicService.getPlayerState() == MediaPlayerStates.STARTED &&
@@ -163,7 +166,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
         when (key_extra) {
             Dictionary.ALL -> {
                 mMusicService.setPlaylist(MusicLoader.allMusic)
-                if(!mMusicService.play()) Toast.makeText(mActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
+                mMusicService.play()
             }
             Dictionary.NEXT -> {
                 if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
@@ -190,6 +193,19 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
             }
         }
         return
+    }
+
+    private fun addMusicsFromPayloadandPlay(words: MutableList<String>, type: String, shouldAdd: Boolean){
+        val pld = getPayload(words)
+        val playlist = MusicLoader.getPlaylistFromPayload(pld, type)
+        if(!playlist.isEmpty()){
+            if(shouldAdd) mMusicService.addToPlaylist(playlist)
+            else {
+                mMusicService.setPlaylist(playlist)
+                mMusicService.play()
+            }
+        }
+        else Toast.makeText(mActivity, "NOTHING MATCHES WITH YOU WANT", Toast.LENGTH_LONG).show()
     }
 
     private fun getPayload(words: MutableList<String>): String {

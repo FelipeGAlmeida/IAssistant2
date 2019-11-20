@@ -13,6 +13,7 @@ class Dictionary {
         const val PREV = "PREV"
         const val FOLDER = "FOLDER"
         const val ALL = "ALL"
+        const val ADD = "ADD"
 
         /* *** Maps *** */
         var actions = mutableMapOf<String, ArrayList<String>>()
@@ -21,6 +22,10 @@ class Dictionary {
 
         fun init() {
             /* ***** Actions ***** */
+            val a_add = arrayListOf("adiciona", "inseri")
+            a_add += arrayListOf("add", "insert")
+            actions[ADD] = a_add
+
             val a_play = arrayListOf("ouvi", "escuta", "reproduzi", "toca", "iniciar", "continu", "retomar")
             a_play += arrayListOf("listen", "play", "start")
             actions[PLAY] = a_play

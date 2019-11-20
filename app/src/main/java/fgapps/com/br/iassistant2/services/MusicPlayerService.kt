@@ -35,7 +35,7 @@ class MusicPlayerService : Service(),
         initMusicPlayer()
     }
 
-    fun initMusicPlayer(){
+    fun initMusicPlayer() {
         mMediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK)
         mMediaPlayer.setAudioAttributes(AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -46,7 +46,7 @@ class MusicPlayerService : Service(),
         mMediaPlayer.setOnErrorListener(this)
     }
 
-    fun play(music: Music?){
+    fun play(music: Music?) {
 
         if(mPlaylist.size == 0) return //If there's nothing to PLAY, return
 
@@ -74,49 +74,50 @@ class MusicPlayerService : Service(),
 
     }
 
-    fun setPlaylist(playlist: ArrayList<Music>){
+    fun setPlaylist(playlist: ArrayList<Music>) {
         mPlaylist = playlist
     }
 
-    /*** Player controls ***/
+    fun addToPlaylist(playlist: ArrayList<Music>) {
+        mPlaylist.addAll(playlist)
+        notifyMusicChanges()
+    }
 
-    fun play(): Boolean {
-        if(mPlaylist.size == 0){
-            return false
-        }
+    /*** Player controls ***/
+    fun play() {
+        if(mPlaylist.size == 0) return
         if(mState == MediaPlayerStates.PAUSED) {
             mMediaPlayer.start()
             setState(MediaPlayerStates.STARTED)
-            return true
+            return
         }
         play(null)
-        return true
     }
 
-    fun pause(){
+    fun pause() {
         mMediaPlayer.pause()
         setState(MediaPlayerStates.PAUSED)
     }
 
-    fun stop(){
+    fun stop() {
         mMediaPlayer.stop()
         mMediaPlayer.reset()
         setState(MediaPlayerStates.IDLE)
     }
 
-    fun next(){
+    fun next() {
         music_idx++
         if(music_idx >= mPlaylist.size) music_idx = 0
         play(null)
     }
 
-    fun prev(){
+    fun prev() {
         music_idx--
         if(music_idx < 0) music_idx = mPlaylist.size-1
         play(null)
     }
 
-    fun setVolume(value: Float){
+    fun setVolume(value: Float) {
         mMediaPlayer.setVolume(value, value)
     }
 
@@ -130,17 +131,14 @@ class MusicPlayerService : Service(),
 
     /*** Media Player service functions ***/
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return super.onStartCommand(intent, flags, startId)
-    }
+//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+//        return super.onStartCommand(intent, flags, startId)
+//    }
 
     override fun onPrepared(p0: MediaPlayer?) {
         mMediaPlayer.start()
         setState(MediaPlayerStates.STARTED)
-        if(mMainActivity != null) {
-            val indexes = Utils.boundMusicIndexes(mPlaylist.size, music_idx)
-            mMainActivity!!.musicChanged(mPlaylist[indexes[0]], mPlaylist[indexes[1]], mPlaylist[indexes[2]])
-        }
+        notifyMusicChanges()
     }
 
     override fun onCompletion(p0: MediaPlayer?) {
@@ -155,10 +153,17 @@ class MusicPlayerService : Service(),
         return false
     }
 
-    fun setState(state: MediaPlayerStates){
+    private fun setState(state: MediaPlayerStates) {
         mState = state
         if(mMainActivity != null)
             mMainActivity!!.stateChanged(mState)
+    }
+
+    private fun notifyMusicChanges() {
+        if (mMainActivity != null) {
+            val indexes = Utils.boundMusicIndexes(mPlaylist.size, music_idx)
+            mMainActivity!!.musicChanged(mPlaylist[indexes[0]], mPlaylist[indexes[1]], mPlaylist[indexes[2]])
+        }
     }
 
     /*** Binder service code ***/
@@ -170,7 +175,7 @@ class MusicPlayerService : Service(),
         fun getService(): MusicPlayerService = this@MusicPlayerService
     }
 
-    fun setMainActivity(mainActivity: MainActivity){
+    fun setMainActivity(mainActivity: MainActivity) {
         mMainActivity = mainActivity
     }
 }

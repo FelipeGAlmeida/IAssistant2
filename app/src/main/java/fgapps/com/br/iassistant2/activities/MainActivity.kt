@@ -117,8 +117,6 @@ class MainActivity : AppCompatActivity(),
             override fun onClick(p0: View?) {
                 if(mBound)
                     if(mMusicService.isPlaying()) mMusicService.pause()
-                    else if(!mMusicService.play())
-                        Toast.makeText(this@MainActivity, "NADA PARA TOCAR", Toast.LENGTH_LONG).show()
             }
 
         })
