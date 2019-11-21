@@ -3,7 +3,7 @@ package fgapps.com.br.iassistant2.music
 import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
-import fgapps.com.br.iassistant2.defines.Dictionary
+import fgapps.com.br.iassistant2.defines.Constants
 import fgapps.com.br.iassistant2.utils.Utils
 
 
@@ -65,13 +65,13 @@ class MusicLoader {
             }
 
             if(!isFolder && playlist.isEmpty()){
-                sortPlaylist(playlist, payload)
+                deepSearch(playlist, payload)
             }
 
             return playlist
         }
 
-        fun sortPlaylist(playlist: ArrayList<Music>, payload: String){
+        fun deepSearch(playlist: ArrayList<Music>, payload: String){
             val words = payload.split(" ")
             val n_music = allMusic.size
             val max_match = words.size
@@ -90,7 +90,7 @@ class MusicLoader {
                     if (!playlist.contains(allMusic[i]))
                         playlist.add(0, allMusic[i]) // Then we put in the beginning
                 } else if(matches[i] == max_match - 1 &&
-                        max_match > 2){ // Nearly max matches are allowed too
+                        max_match > Constants.MIN_MATCHES){ // Nearly max matches are allowed too
                     if (!playlist.contains(allMusic[i]))
                         playlist.add(allMusic[i]) // Else, we put in the end
                 }
@@ -110,7 +110,7 @@ class MusicLoader {
             val match_char = match.toCharArray()
 
             if (source_char[0] != match_char[0] || // If the start are not equals, the rest isn't too
-                    match.length < 3) {            // If the source is too small, should not be
+                    match.length < Constants.MIN_MATCHNAME) { // If the source is too small, should not be
                 return false
             }
 
@@ -129,7 +129,7 @@ class MusicLoader {
                 source_idx++
             }
 
-            return equality >= source_idx - 2
+            return equality >= source_idx - Constants.ALLOWED_ERRORS
         }
 
     }

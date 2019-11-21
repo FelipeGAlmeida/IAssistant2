@@ -5,6 +5,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import androidx.core.view.GestureDetectorCompat
 import fgapps.com.br.iassistant2.activities.MainActivity
+import fgapps.com.br.iassistant2.defines.Constants
 import fgapps.com.br.iassistant2.utils.Utils
 
 class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureListener,
@@ -32,11 +33,11 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
         val screenX = mActivity.getAppWidth()
         val delay: Long
         val isMusic: Boolean
-        if(downEvent.x < (screenX * 80 / 100)){
-            delay = 100
+        if(downEvent.x < (screenX * Constants.WIDTH_MUSICCHANGE)){
+            delay = Constants.DELAY_MUSICCHANGE
             isMusic = true
         }else{
-            delay = 15
+            delay = Constants.DELAY_VOLUMECHANGE
             isMusic = false
         }
 

@@ -5,16 +5,16 @@ class Dictionary {
     companion object {
 
         /* *** Constants *** */
-        const val MUSIC = "MUSIC"
-        const val TIME = "TIME"
         const val PLAY = "PLAY"
         const val PAUSE = "PAUSE"
         const val NEXT = "NEXT"
         const val PREV = "PREV"
-        const val FOLDER = "FOLDER"
-        const val ALL = "ALL"
         const val ADD = "ADD"
         const val GOTO = "GOTO"
+        const val MUSIC = "MUSIC"
+        const val FOLDER = "FOLDER"
+        const val ALL = "ALL"
+        const val TIME = "TIME"
 
         /* *** Maps *** */
         var actions = mutableMapOf<String, ArrayList<String>>()

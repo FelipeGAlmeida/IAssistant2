@@ -1,6 +1,8 @@
 package fgapps.com.br.iassistant2.utils
 
 import fgapps.com.br.iassistant2.activities.MainActivity
+import fgapps.com.br.iassistant2.defines.Constants
+import fgapps.com.br.iassistant2.defines.Settings
 import java.util.*
 
 class Dimmer(mainActivity: MainActivity) {
@@ -8,10 +10,10 @@ class Dimmer(mainActivity: MainActivity) {
     private val mMainActivity = mainActivity
     private var mTimer: Timer = Timer()
 
-    private var mIdleTime = 35
+    private var mIdleTime = Settings.DIMMER_TIME
 
     fun init(){
-        mTimer.scheduleAtFixedRate(mTimerTask, 0, 1000) //Verify if has to Dimmer each second
+        mTimer.scheduleAtFixedRate(mTimerTask, 0, Constants.SECOND) //Verify if has to Dimmer each second
     }
 
     private val mTimerTask = object: TimerTask() {
@@ -21,25 +23,25 @@ class Dimmer(mainActivity: MainActivity) {
         }
     }
 
-    fun isDimmeredDown(): Boolean{
-        return mIdleTime < 0
+    fun isDimmedDown(): Boolean{
+        return mIdleTime == Constants.DIMMERDOWN_TIME
     }
 
     fun down(){
         val attributes = mMainActivity.window.attributes
-        attributes.screenBrightness = 0f
+        attributes.screenBrightness = Constants.MIN_DIMMER
         mMainActivity.runOnUiThread {
             mMainActivity.window.attributes = attributes
-            mIdleTime = -1
+            mIdleTime = Constants.DIMMERDOWN_TIME
         }
     }
 
     fun up(){
         val attributes = mMainActivity.window.attributes
-        attributes.screenBrightness = -1f
+        attributes.screenBrightness = Constants.MAX_DIMMER
         mMainActivity.runOnUiThread{
             mMainActivity.window.attributes = attributes
-            mIdleTime = 35
+            mIdleTime = Settings.DIMMER_TIME
         }
     }
 }

@@ -12,8 +12,6 @@ import android.os.Handler
 import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -25,6 +23,7 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import fgapps.com.br.iassistant2.R
+import fgapps.com.br.iassistant2.defines.Constants
 import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.gestures.GestureController
 import fgapps.com.br.iassistant2.music.Music
@@ -93,8 +92,8 @@ class MainActivity : AppCompatActivity(),
                                         Manifest.permission.READ_EXTERNAL_STORAGE,
                                         Permissions.READ_EXTERNAL_STORAGE_CODE)) MusicLoader.loadAllMusic(this@MainActivity)
                         Handler().postDelayed({
-                            Animations.fade(this@MainActivity, splashscreen_panel, 800, true)
-                        }, 800)
+                            Animations.fade(this@MainActivity, splashscreen_panel, Constants.HIDE_SPLASHSCREEN, true)
+                        }, Constants.HIDE_SPLASHSCREEN)
                         return false
                     }
 
@@ -128,7 +127,7 @@ class MainActivity : AppCompatActivity(),
                 command_edit.setText("")
                 Utils.enableKeyboard(this@MainActivity, false, command_edit)
                 mEditHandler!!.removeCallbacksAndMessages(null)
-                Animations.fade(this@MainActivity, typeCommand_panel, 300, true)
+                Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEOUT_COMMANDEDIT, true)
                 mEditShown = false
             }
         })
@@ -152,10 +151,12 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun setVolumeViews(volume: Float){
-        volume_txt.text = ((volume*10).toInt()*10).toString()
+        volume_txt.text = ((volume*Constants.STEP_VOLUMEBAR)
+                            .toInt()*Constants.STEP_VOLUMEBAR)
+                            .toString()
 
         val vol_int = (volume * getAppHeight()).toInt()
-        when(vol_int == 0){
+        when(vol_int == Constants.VOLUME_MUTE){
             true -> {
                 mute_img.visibility = View.VISIBLE
                 volume_txt.visibility = View.GONE
@@ -167,8 +168,8 @@ class MainActivity : AppCompatActivity(),
         }
 
         val lp = volume_bar.layoutParams
-        lp.height = vol_int + 50
-        lp.width = (getAppWidth()*0.1).toInt()
+        lp.height = vol_int + Constants.VOLZERO_GAP
+        lp.width = (getAppWidth() * Constants.WIDTH_VOLUMEPANEL).toInt()
         volume_bar.layoutParams = lp
     }
 
@@ -205,15 +206,15 @@ class MainActivity : AppCompatActivity(),
         }
 
         if(mVolumeShown) mVolumeHandler!!.removeCallbacksAndMessages(null)
-        else Animations.fade(this@MainActivity, volume_panel, 300, false)
+        else Animations.fade(this@MainActivity, volume_panel, Constants.FADEIN_VOLUMEBAR, false)
 
         mVolumeShown = true
 
-        if(volume > 0) {
+        if(volume > Constants.VOLUME_MUTE) {
             mVolumeHandler!!.postDelayed({
-                Animations.fade(this@MainActivity, volume_panel, 500, true)
+                Animations.fade(this@MainActivity, volume_panel, Constants.FADEOUT_VOLUMEBAR, true)
                 mVolumeShown = false
-            }, 1200)
+            }, Constants.HIDE_VOLUMEBAR)
         }
 
         setVolumeViews(volume)
@@ -221,14 +222,14 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun showButtons() {
-        if(mDimmer.isDimmeredDown()) mDimmer.up()
+        if(mDimmer.isDimmedDown()) mDimmer.up()
 
         if(mButtonHandler == null){
             mButtonHandler = Handler()
         }
 
-        Animations.fade(this@MainActivity, settings_btn, 300, mButtonShown)
-        Animations.fade(this@MainActivity, repeat_btn, 300, mButtonShown)
+        Animations.fade(this@MainActivity, settings_btn, Constants.FADEIN_BUTTONS, mButtonShown)
+        Animations.fade(this@MainActivity, repeat_btn, Constants.FADEIN_BUTTONS, mButtonShown)
 
         if(mButtonShown) {
             mButtonShown = false
@@ -239,39 +240,39 @@ class MainActivity : AppCompatActivity(),
         mButtonShown = true
         mButtonHandler!!.postDelayed(
                 {
-                    Animations.fade(this@MainActivity, settings_btn, 300, mButtonShown)
-                    Animations.fade(this@MainActivity, repeat_btn, 300, mButtonShown)
+                    Animations.fade(this@MainActivity, settings_btn, Constants.FADEOUT_BUTTONS, mButtonShown)
+                    Animations.fade(this@MainActivity, repeat_btn, Constants.FADEOUT_BUTTONS, mButtonShown)
                     mButtonShown = false
-                },3200)
+                },Constants.HIDE_BUTTONS)
     }
 
     override fun singlePress() {
-        if(mDimmer.isDimmeredDown()) mDimmer.up()
+        if(mDimmer.isDimmedDown()) mDimmer.up()
         else {
             // Should init the Voice Recognition
         }
     }
 
     override fun longPress() {
-        if(mDimmer.isDimmeredDown()) mDimmer.up()
+        if(mDimmer.isDimmedDown()) mDimmer.up()
 
         if(mEditHandler == null){
             mEditHandler = Handler()
         }
 
         if(!mEditShown){
-            Animations.fade(this@MainActivity, typeCommand_panel, 300, false)
+            Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEIN_COMMANDEDIT, false)
             Utils.enableKeyboard(this@MainActivity, true, command_edit)
             mEditShown = true
         } else mEditHandler!!.removeCallbacksAndMessages(null)
 
         mEditHandler!!.postDelayed(
                 {
-                    Animations.fade(this@MainActivity, typeCommand_panel, 300, true)
+                    Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEOUT_COMMANDEDIT, true)
                     Utils.enableKeyboard(this@MainActivity, false, command_edit)
                     command_edit.setText("")
                     mEditShown = false
-                }, 5200)
+                }, Constants.HIDE_COMMANDEDIT)
     }
 
     /*** Media Player response functions ***/
@@ -279,10 +280,10 @@ class MainActivity : AppCompatActivity(),
         Animations.stopBlink()
         when(state){
             MediaPlayerStates.STARTED -> {
-                Animations.fade(this@MainActivity, music_panel, 500, false)
+                Animations.fade(this@MainActivity, music_panel, Constants.FADEIN_MUSICS, false)
             }
             MediaPlayerStates.PAUSED -> {
-                Animations.blink(this@MainActivity, music_panel, 800)
+                Animations.blink(this@MainActivity, music_panel, Constants.BLINK_PERIOD)
             }
             else -> {}
         }
