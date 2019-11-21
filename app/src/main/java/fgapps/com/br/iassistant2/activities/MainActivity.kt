@@ -15,6 +15,7 @@ import android.text.TextWatcher
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.bumptech.glide.Glide
@@ -33,6 +34,7 @@ import fgapps.com.br.iassistant2.utils.Animations
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.interfaces.*
 import fgapps.com.br.iassistant2.services.AIService
+import fgapps.com.br.iassistant2.services.ExternalEventsService
 import fgapps.com.br.iassistant2.utils.Dimmer
 import fgapps.com.br.iassistant2.utils.Permissions
 import fgapps.com.br.iassistant2.utils.Utils
@@ -50,6 +52,7 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var mDimmer: Dimmer
     private lateinit var mAI: AIService
+    private lateinit var mExternalEvents: ExternalEventsService
 
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
@@ -89,8 +92,9 @@ class MainActivity : AppCompatActivity(),
 
                     override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
                         if(Permissions.checkPermission(this@MainActivity,
-                                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                                        Permissions.READ_EXTERNAL_STORAGE_CODE)) MusicLoader.loadAllMusic(this@MainActivity)
+                                        Manifest.permission.READ_EXTERNAL_STORAGE))
+                            MusicLoader.loadAllMusic(this@MainActivity)
+
                         Handler().postDelayed({
                             Animations.fade(this@MainActivity, splashscreen_panel, Constants.HIDE_SPLASHSCREEN, true)
                         }, Constants.HIDE_SPLASHSCREEN)
@@ -106,6 +110,11 @@ class MainActivity : AppCompatActivity(),
         mDetector = GestureDetectorCompat(this, mGestureController)
         mDetector.setOnDoubleTapListener(mGestureController)
         mGestureController.setGestureDetector(mDetector)
+    }
+
+    private fun setDimmer(){
+        mDimmer = Dimmer(this@MainActivity)
+        mDimmer.init()
     }
 
     private fun setControls(){
@@ -156,14 +165,13 @@ class MainActivity : AppCompatActivity(),
         })
     }
 
-    private fun setDimmer(){
-        mDimmer = Dimmer(this@MainActivity)
-        mDimmer.init()
-    }
-
     private fun setAI(){
         Dictionary.init()
         mAI = AIService(this@MainActivity, mMusicService)
+    }
+
+    private fun startMonitoringExternalEvents() {
+        mExternalEvents = ExternalEventsService(this@MainActivity, mMusicService)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -240,6 +248,7 @@ class MainActivity : AppCompatActivity(),
         if(mDimmer.isDimmedDown()) mDimmer.up()
         else {
             // Should init the Voice Recognition
+            Permissions.checkPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO)
         }
     }
 
@@ -325,13 +334,20 @@ class MainActivity : AppCompatActivity(),
     /*** Request permission Callback ***/
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when(requestCode){
-            Permissions.READ_EXTERNAL_STORAGE_CODE -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    MusicLoader.loadAllMusic(this@MainActivity)
-                } else {
-                    this.finishAndRemoveTask() //Can't proceed without this permission
+            Permissions.REQ_PERMISSION_CODE -> {
+                if(!grantResults.isEmpty()){
+                    grantResults.forEachIndexed{ i, result ->
+                        if(permissions[i] == Manifest.permission.READ_EXTERNAL_STORAGE) {
+                            if (result == PackageManager.PERMISSION_DENIED)
+                                Toast.makeText(this, "YOU CAN GRANT THIS LATER", Toast.LENGTH_SHORT).show()
+                            else MusicLoader.loadAllMusic(this@MainActivity)
+                        }
+                        if(permissions[i] == Manifest.permission.READ_EXTERNAL_STORAGE) {
+                            if (result == PackageManager.PERMISSION_DENIED)
+                                Toast.makeText(this, "YOU CAN GRANT THIS LATER", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
-                return
             }
         }
     }
@@ -345,6 +361,7 @@ class MainActivity : AppCompatActivity(),
             mMusicService.setMainActivity(this@MainActivity)
 
             setAI()
+            startMonitoringExternalEvents()
 
             mBound = true
         }
@@ -370,7 +387,8 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStop() {
         super.onStop()
-        unbindService(connection) //Unbinds from local service
+        mExternalEvents.stopExternalMonitoring() // Stop system broadcasts
+        unbindService(connection) // Unbinds from local service
         mBound = false
     }
 }

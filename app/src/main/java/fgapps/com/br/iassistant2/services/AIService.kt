@@ -1,13 +1,15 @@
 package fgapps.com.br.iassistant2.services
 
+import android.Manifest
 import android.widget.Toast
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.music.MusicLoader
+import fgapps.com.br.iassistant2.utils.Permissions
 import fgapps.com.br.iassistant2.utils.Utils
 
-class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
+class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
 
     private val mActivity = mainActivity
     private val mMusicService = musicService
@@ -223,6 +225,8 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
     private fun analyseExtra(key_extra: String) {
         when (key_extra) {
             Dictionary.ALL -> {
+                if(!hasStoragePermission(mActivity)) return
+
                 mMusicService.setPlaylist(MusicLoader.allMusic)
                 mMusicService.play()
             }
@@ -276,18 +280,22 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
     }
 
     private fun playSpecificSong(payload: String){
-        for(musicToGo in MusicLoader.getPlaylistFromPayload(payload, false)){
+        if(!hasStoragePermission(mActivity)) return
+
+        for (musicToGo in MusicLoader.getPlaylistFromPayload(payload, false)) {
             val indexToGo = mMusicService.checkIndexInPlaylist(musicToGo)
-            if(indexToGo >= 0){
+            if (indexToGo >= 0) {
                 mMusicService.play(indexToGo)
                 return
             }
         }
         // If no music was found
         Toast.makeText(mActivity, "MUSIC IS NOT IN THE PLAYLIST", Toast.LENGTH_LONG).show()
+
     }
 
     private fun addMusicsFromPayloadAndPlay(payload: String, isFolder: Boolean, shouldAdd: Boolean){
+        if(!hasStoragePermission(mActivity)) return
         if(!hasMusics()) return //Check if there are musics to be played
 
         val playlist = MusicLoader.getPlaylistFromPayload(payload, isFolder)
@@ -322,6 +330,16 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService){
             }
         }
         return null
+    }
+
+    private fun hasStoragePermission(mainActivity: MainActivity): Boolean {
+        when(Permissions.checkPermission(mainActivity, Manifest.permission.READ_EXTERNAL_STORAGE)){
+            true -> return true
+            false -> {
+                Toast.makeText(mainActivity, "CONCEDA A PERMISSÃO E TENTE NOVAMENTE", Toast.LENGTH_LONG).show()
+            }
+        }
+        return false
     }
 
     private fun hasMusics(): Boolean{

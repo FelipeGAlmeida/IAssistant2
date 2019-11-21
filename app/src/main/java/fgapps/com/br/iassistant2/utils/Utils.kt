@@ -1,6 +1,8 @@
 package fgapps.com.br.iassistant2.utils
 
 import android.content.Context
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import fgapps.com.br.iassistant2.activities.MainActivity
@@ -82,6 +84,25 @@ class Utils {
                 true -> imm?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
             }
             view.requestFocus()
+        }
+
+        fun isHeadsetPlugged(mActivity: MainActivity): Boolean{
+            val am = mActivity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val devices = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+
+            for (i in devices.indices) {
+                val device = devices[i]
+
+                if (device.getType() == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                        device.getType() == AudioDeviceInfo.TYPE_WIRED_HEADPHONES){
+                    return true // Plugged as wired device
+                }
+                if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP){
+                    return true // Plugged as Bluetooth Audio (Must be Audio)
+                }
+            }
+
+            return false
         }
 
 //        fun showAlertDialog(mainActivity: MainActivity, title: String, message: String){

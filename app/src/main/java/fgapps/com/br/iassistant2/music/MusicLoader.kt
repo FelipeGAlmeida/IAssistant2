@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
 import fgapps.com.br.iassistant2.defines.Constants
+import fgapps.com.br.iassistant2.utils.Permissions
 import fgapps.com.br.iassistant2.utils.Utils
 
 
@@ -52,6 +53,7 @@ class MusicLoader {
 
         /* ***** Get a playlist based on specific input ***** */
         fun getPlaylistFromPayload(payload: String, isFolder: Boolean): ArrayList<Music>{
+
             val playlist = ArrayList<Music>()
             for(music in allMusic){
 

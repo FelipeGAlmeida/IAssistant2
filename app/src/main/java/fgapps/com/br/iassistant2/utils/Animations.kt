@@ -1,6 +1,7 @@
 package fgapps.com.br.iassistant2.utils
 
 import android.os.Handler
+import android.util.Log
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -20,6 +21,12 @@ class Animations {
                     if(blink_flag) fade(mainActivity, view, duration / 2, true)
                     else fade(mainActivity, view, duration / 2, false)
                     blink_flag = !blink_flag
+                }
+
+                override fun cancel(): Boolean {
+                    view.visibility = View.VISIBLE
+                    Log.d("TIMER", "BLINK CANCELED")
+                    return super.cancel()
                 }
             },0 , duration/2)
         }

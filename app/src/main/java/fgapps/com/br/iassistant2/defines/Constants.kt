@@ -48,5 +48,13 @@ class Constants {
         const val DIMMER_DEFAULT = 30
 
         const val SECOND = 1000L
+
+        const val A2DP_TIMEOUT = 75
+        const val A2DP_PERIOD = 200L
+
+        const val PERMISSION_ALL = -1
+        const val PERMISSION_STORAGE = 0
+        const val PERMISSION_PHONE = 1
+        const val PERMISSION_MICROPHONE = 2
     }
 }

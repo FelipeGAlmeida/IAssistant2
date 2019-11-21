@@ -1,19 +1,20 @@
 package fgapps.com.br.iassistant2.services
 
 import android.app.Service
+import android.content.ContentUris
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
 import android.os.PowerManager
-import android.content.ContentUris
 import android.util.Log
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.utils.Utils
 import java.util.*
+
 
 class MusicPlayerService : Service(),
         MediaPlayer.OnPreparedListener,
@@ -111,6 +112,7 @@ class MusicPlayerService : Service(),
     }
 
     fun pause() {
+        if(mPlaylist.size == 0) return
         mMediaPlayer.pause()
         setState(MediaPlayerStates.PAUSED)
     }
@@ -167,11 +169,6 @@ class MusicPlayerService : Service(),
     }
 
     /*** Media Player service functions ***/
-
-//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        return super.onStartCommand(intent, flags, startId)
-//    }
-
     override fun onPrepared(p0: MediaPlayer?) {
         mMediaPlayer.start()
         setState(MediaPlayerStates.STARTED)
@@ -215,4 +212,13 @@ class MusicPlayerService : Service(),
     fun setMainActivity(mainActivity: MainActivity) {
         mMainActivity = mainActivity
     }
+
+    /*** Service control ***/
+//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+//        return super.onStartCommand(intent, flags, startId)
+//    }
+
+//    override fun onDestroy() {
+//        super.onDestroy()
+//    }
 }
