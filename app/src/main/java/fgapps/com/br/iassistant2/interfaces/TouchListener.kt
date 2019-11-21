@@ -6,4 +6,6 @@ interface TouchListener {
 
     fun longPress()
 
+    fun doublePress()
+
 }

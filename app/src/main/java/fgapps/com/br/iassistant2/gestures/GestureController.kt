@@ -54,7 +54,7 @@ class GestureController(mainActivity: MainActivity) : GestureDetector.OnGestureL
     }
 
     override fun onDoubleTap(event: MotionEvent): Boolean {
-        mActivity.showButtons()
+        mActivity.doublePress()
         return true
     }
 

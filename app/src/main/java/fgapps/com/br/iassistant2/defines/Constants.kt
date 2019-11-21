@@ -20,6 +20,12 @@ class Constants {
         const val FADEOUT_BUTTONS = 300L
         const val HIDE_BUTTONS = 3200L
 
+        const val FADEIN_SHUFFLE = 500L
+        const val FADEOUT_SHUFFLE = 150L
+
+        const val SHUFFLE_ON = 200
+        const val SHUFFLE_OFF = 20
+
         const val BLINK_PERIOD = 800L
 
         const val VOLUME_MUTE = 0

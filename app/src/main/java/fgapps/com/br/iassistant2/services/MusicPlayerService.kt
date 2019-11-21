@@ -137,7 +137,7 @@ class MusicPlayerService : Service(),
         mMediaPlayer.setVolume(value, value)
     }
 
-    fun shuffle(){
+    fun shuffle(): Boolean{
         val music = mPlaylist[music_idx]
         mShuffle = !mShuffle
         music_idx = when(mShuffle){
@@ -155,6 +155,7 @@ class MusicPlayerService : Service(),
             }
         }
         notifyMusicChanges()
+        return mShuffle
     }
 
     fun isPlaying(): Boolean {

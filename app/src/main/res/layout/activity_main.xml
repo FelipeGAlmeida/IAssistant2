@@ -76,10 +76,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <ImageButton
+        android:id="@+id/shuffle_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/button_mod2"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/repeat_btn"
+        app:layout_constraintDimensionRatio="w,1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_shuffle" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/music_panel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@+id/repeat_btn"
@@ -134,6 +150,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout

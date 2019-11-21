@@ -41,7 +41,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(),
                     MusicChangeListener,
                     VolumeChangeListener,
-                    ShowButtonsListener,
                     MediaPlayerListener,
                     TouchListener {
 
@@ -79,6 +78,7 @@ class MainActivity : AppCompatActivity(),
 
     private fun setBackground() {
         splashscreen_panel.visibility = View.VISIBLE
+        shuffle_btn.drawable.alpha = Constants.SHUFFLE_OFF
         background = background_img
         Glide.with(this)
                 .load(R.drawable.back_anim1)
@@ -109,6 +109,12 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun setControls(){
+        shuffle_btn.setOnClickListener(object: View.OnClickListener{
+            override fun onClick(p0: View?) {
+                if(mBound) setShuffleView(mMusicService.shuffle())
+            }
+        })
+
         command_edit.addTextChangedListener(object: TextWatcher{
             override fun afterTextChanged(p0: Editable?) {}
 
@@ -116,15 +122,17 @@ class MainActivity : AppCompatActivity(),
 
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 if(p0 != null && p0.toString() != "")
-                    this@MainActivity.longPress()
+                    this@MainActivity.doublePress()
             }
 
         })
 
         command_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
-                mAI.checkCommand(command_edit.text.toString())
-                command_edit.setText("")
+                if(mBound) {
+                    mAI.checkCommand(command_edit.text.toString())
+                    command_edit.setText("")
+                }
                 Utils.enableKeyboard(this@MainActivity, false, command_edit)
                 mEditHandler!!.removeCallbacksAndMessages(null)
                 Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEOUT_COMMANDEDIT, true)
@@ -142,18 +150,43 @@ class MainActivity : AppCompatActivity(),
 
         repeat_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
-                if(mBound) {
-                    mMusicService.shuffle()
-                }
+
             }
 
         })
     }
 
+    private fun setDimmer(){
+        mDimmer = Dimmer(this@MainActivity)
+        mDimmer.init()
+    }
+
+    private fun setAI(){
+        Dictionary.init()
+        mAI = AIService(this@MainActivity, mMusicService)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if(!mBound) return false
+        return if (mDetector.onTouchEvent(event)) {
+            true
+        } else {
+            super.onTouchEvent(event)
+        }
+    }
+
+    /*** Set View Changes ***/
+    private fun setShuffleView(shuffled: Boolean){
+        shuffle_btn.drawable.alpha = when(shuffled){
+            true -> Constants.SHUFFLE_ON
+            false -> Constants.SHUFFLE_OFF
+        }
+    }
+
     private fun setVolumeViews(volume: Float){
         volume_txt.text = ((volume*Constants.STEP_VOLUMEBAR)
-                            .toInt()*Constants.STEP_VOLUMEBAR)
-                            .toString()
+                .toInt()*Constants.STEP_VOLUMEBAR)
+                .toString()
 
         val vol_int = (volume * getAppHeight()).toInt()
         when(vol_int == Constants.VOLUME_MUTE){
@@ -173,31 +206,13 @@ class MainActivity : AppCompatActivity(),
         volume_bar.layoutParams = lp
     }
 
-    private fun setDimmer(){
-        mDimmer = Dimmer(this@MainActivity)
-        mDimmer.init()
-    }
-
-    private fun setAI(){
-        Dictionary.init()
-        mAI = AIService(this@MainActivity, mMusicService)
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if (mDetector.onTouchEvent(event)) {
-            true
-        } else {
-            super.onTouchEvent(event)
-        }
-    }
-
     /*** Gesture controller response functions ***/
     override fun nextMusic() {
-        if(mBound) mMusicService.next()
+        mMusicService.next()
     }
 
     override fun prevMusic() {
-        if(mBound) mMusicService.prev()
+        mMusicService.prev()
     }
 
     override fun volumeChange(volume: Float) {
@@ -221,13 +236,22 @@ class MainActivity : AppCompatActivity(),
         if(mBound) mMusicService.setVolume(volume)
     }
 
-    override fun showButtons() {
+    override fun singlePress() {
+        if(mDimmer.isDimmedDown()) mDimmer.up()
+        else {
+            // Should init the Voice Recognition
+        }
+    }
+
+    override fun longPress() {
         if(mDimmer.isDimmedDown()) mDimmer.up()
 
         if(mButtonHandler == null){
             mButtonHandler = Handler()
         }
 
+        if(mMusicService.getPlayerState() != MediaPlayerStates.IDLE)
+            Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEIN_SHUFFLE, !mButtonShown)
         Animations.fade(this@MainActivity, settings_btn, Constants.FADEIN_BUTTONS, mButtonShown)
         Animations.fade(this@MainActivity, repeat_btn, Constants.FADEIN_BUTTONS, mButtonShown)
 
@@ -242,18 +266,13 @@ class MainActivity : AppCompatActivity(),
                 {
                     Animations.fade(this@MainActivity, settings_btn, Constants.FADEOUT_BUTTONS, mButtonShown)
                     Animations.fade(this@MainActivity, repeat_btn, Constants.FADEOUT_BUTTONS, mButtonShown)
+                    if(mMusicService.getPlayerState() != MediaPlayerStates.IDLE)
+                        Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEOUT_SHUFFLE, !mButtonShown)
                     mButtonShown = false
                 },Constants.HIDE_BUTTONS)
     }
 
-    override fun singlePress() {
-        if(mDimmer.isDimmedDown()) mDimmer.up()
-        else {
-            // Should init the Voice Recognition
-        }
-    }
-
-    override fun longPress() {
+    override fun doublePress() {
         if(mDimmer.isDimmedDown()) mDimmer.up()
 
         if(mEditHandler == null){
@@ -281,6 +300,7 @@ class MainActivity : AppCompatActivity(),
         when(state){
             MediaPlayerStates.STARTED -> {
                 Animations.fade(this@MainActivity, music_panel, Constants.FADEIN_MUSICS, false)
+                Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEIN_SHUFFLE, false)
             }
             MediaPlayerStates.PAUSED -> {
                 Animations.blink(this@MainActivity, music_panel, Constants.BLINK_PERIOD)
@@ -323,9 +343,10 @@ class MainActivity : AppCompatActivity(),
             val binder = service as MusicPlayerService.MusicPlayerBinder
             mMusicService = binder.getService()
             mMusicService.setMainActivity(this@MainActivity)
-            mBound = true
 
             setAI()
+
+            mBound = true
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
