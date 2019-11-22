@@ -35,6 +35,7 @@ import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.interfaces.*
 import fgapps.com.br.iassistant2.services.AIService
 import fgapps.com.br.iassistant2.services.ExternalEventsService
+import fgapps.com.br.iassistant2.services.VoiceService
 import fgapps.com.br.iassistant2.utils.Dimmer
 import fgapps.com.br.iassistant2.utils.Permissions
 import fgapps.com.br.iassistant2.utils.Utils
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity(),
     private lateinit var mDimmer: Dimmer
     private lateinit var mAI: AIService
     private lateinit var mExternalEvents: ExternalEventsService
+    private lateinit var mVoice: VoiceService
 
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
@@ -168,6 +170,8 @@ class MainActivity : AppCompatActivity(),
     private fun setAI(){
         Dictionary.init()
         mAI = AIService(this@MainActivity, mMusicService)
+
+        mVoice = VoiceService(this@MainActivity, mAI)
     }
 
     private fun startMonitoringExternalEvents() {
@@ -248,7 +252,9 @@ class MainActivity : AppCompatActivity(),
         if(mDimmer.isDimmedDown()) mDimmer.up()
         else {
             // Should init the Voice Recognition
-            Permissions.checkPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO)
+            if(Permissions.checkPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO)){
+                mVoice.listen()
+            }
         }
     }
 
