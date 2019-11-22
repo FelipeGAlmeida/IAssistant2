@@ -25,6 +25,7 @@ class MusicPlayerService : Service(),
 
     private lateinit var mMediaPlayer: MediaPlayer
     private var mMainActivity: MainActivity? = null
+    private var mPrevState =MediaPlayerStates.IDLE
     private var mState = MediaPlayerStates.IDLE
     private var mShuffle = false
 
@@ -113,6 +114,8 @@ class MusicPlayerService : Service(),
 
     fun pause() {
         if(mPlaylist.size == 0) return
+        if(mState != MediaPlayerStates.STARTED) return
+
         mMediaPlayer.pause()
         setState(MediaPlayerStates.PAUSED)
     }
@@ -164,6 +167,10 @@ class MusicPlayerService : Service(),
         return mMediaPlayer.isPlaying
     }
 
+    fun getPlayerPreviousState(): MediaPlayerStates {
+        return mPrevState
+    }
+
     fun getPlayerState(): MediaPlayerStates {
         return mState
     }
@@ -188,6 +195,7 @@ class MusicPlayerService : Service(),
     }
 
     private fun setState(state: MediaPlayerStates) {
+        mPrevState = mState
         mState = state
         if(mMainActivity != null)
             mMainActivity!!.stateChanged(mState)

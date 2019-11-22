@@ -1,6 +1,5 @@
 package fgapps.com.br.iassistant2.services
 
-import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,10 +8,9 @@ import android.content.IntentFilter
 import android.media.AudioManager
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
-import android.util.Log
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Constants
-import fgapps.com.br.iassistant2.utils.Permissions
+import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.utils.Utils
 import java.util.*
 import kotlin.concurrent.timerTask
@@ -33,16 +31,20 @@ class ExternalEventsService(mainActivity: MainActivity, musicService: MusicPlaye
             }
 
             if (action == AudioManager.ACTION_HEADSET_PLUG) {
-                if(intent.getIntExtra("state", 0) > 0) mMusicService.play()
+                if(intent.getIntExtra("state", 0) > 0)
+                    if(mMusicService.getPlayerPreviousState() == MediaPlayerStates.STARTED)
+                            mMusicService.play()
                 return
             }
 
             if(action == BluetoothDevice.ACTION_ACL_CONNECTED) {
                 var timeout = Constants.A2DP_TIMEOUT
                 Timer().scheduleAtFixedRate(timerTask {
-                    mActivity?.let {
-                        if(Utils.isHeadsetPlugged(mActivity!!)){
-                            mMusicService.play()
+                    mActivity.let {
+                        if(Utils.isHeadsetPlugged(mActivity)){
+                            if(mMusicService.getPlayerPreviousState() ==
+                                    MediaPlayerStates.STARTED)
+                                mMusicService.play()
                             cancel()
                         }
                         if(timeout <= 0) cancel()
@@ -56,7 +58,10 @@ class ExternalEventsService(mainActivity: MainActivity, musicService: MusicPlaye
 
     override fun onCallStateChanged(state: Int, phoneNumber: String?) {
         when(state){
-            TelephonyManager.CALL_STATE_IDLE -> mMusicService.play()
+            TelephonyManager.CALL_STATE_IDLE ->{
+                if(mMusicService.getPlayerPreviousState() == MediaPlayerStates.STARTED)
+                    mMusicService.play()
+            }
             else -> mMusicService.pause()
         }
     }
