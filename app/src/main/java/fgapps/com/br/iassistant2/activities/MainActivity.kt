@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
@@ -32,6 +34,7 @@ import fgapps.com.br.iassistant2.music.MusicLoader
 import fgapps.com.br.iassistant2.services.MusicPlayerService
 import fgapps.com.br.iassistant2.utils.Animations
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
+import fgapps.com.br.iassistant2.defines.VoiceStates
 import fgapps.com.br.iassistant2.interfaces.*
 import fgapps.com.br.iassistant2.services.AIService
 import fgapps.com.br.iassistant2.services.ExternalEventsService
@@ -45,7 +48,8 @@ class MainActivity : AppCompatActivity(),
                     MusicChangeListener,
                     VolumeChangeListener,
                     MediaPlayerListener,
-                    TouchListener {
+                    TouchListener,
+                    VoiceCommands {
 
     /*** Variables ***/
     private lateinit var mMusicService: MusicPlayerService
@@ -216,6 +220,66 @@ class MainActivity : AppCompatActivity(),
         lp.height = vol_int + Constants.VOLZERO_GAP
         lp.width = (getAppWidth() * Constants.WIDTH_VOLUMEPANEL).toInt()
         volume_bar.layoutParams = lp
+    }
+
+    private fun setVoiceView(spoke: String?, tip: String?, listen: String?, state: VoiceStates){
+        when(state){
+            VoiceStates.LISTENING -> {
+                runOnUiThread {
+                    earing_img.setImageResource(R.drawable.ic_ear)
+                    earing_img.drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+                    earing_img.visibility = View.VISIBLE
+                    speak_panel.visibility = View.VISIBLE
+                }
+            }
+            VoiceStates.SPEAKING -> {
+                runOnUiThread{
+                    earing_img.setImageResource(R.drawable.ic_happiest)
+                    earing_img.drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+                }
+
+                spoke?.let {
+                    var speak = it
+                    voice_txt.visibility = View.VISIBLE
+                    if(speak.startsWith("Agora são ")) speak = Utils.getCurrentTime(false)
+                    voice_txt.text = speak
+                }
+            }
+            VoiceStates.SUCCESS -> {
+                runOnUiThread{ earing_img.drawable.setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN) }
+
+                listen?.let { // Success for listening
+                    runOnUiThread{ listen_panel.visibility = View.VISIBLE }
+                    listen_txt.text = it
+                    runOnUiThread{ Handler().postDelayed({ listen_panel.visibility = View.INVISIBLE }, 2000) }
+                    return
+                }
+                // Success for speaking
+                runOnUiThread{
+                    speak_panel.visibility = View.INVISIBLE
+                    earing_img.visibility = View.INVISIBLE
+                    listen_panel.visibility = View.INVISIBLE
+                }
+            }
+            VoiceStates.ERROR -> {
+                runOnUiThread{
+                    earing_img.drawable.setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN)
+                    Handler().postDelayed({ earing_img.visibility = View.GONE }, 800)
+                }
+            }
+            else -> {
+                runOnUiThread{ voice_panel.visibility = View.INVISIBLE }
+            }
+        }
+    }
+
+    /*** Voice response functions ***/
+    override fun onListenAction(listen: String?, state: VoiceStates) {
+        setVoiceView(null, "alguma dica atoa", listen, state)
+    }
+
+    override fun onSpeakAction(spoke: String?, state: VoiceStates) {
+        setVoiceView(spoke, "alguma dica atoa", null, state)
     }
 
     /*** Gesture controller response functions ***/

@@ -1,7 +1,7 @@
 package fgapps.com.br.iassistant2.services
 
 import android.Manifest
-import android.widget.Toast
+import android.os.Handler
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
@@ -13,6 +13,8 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
 
     private val mActivity = mainActivity
     private val mMusicService = musicService
+
+    private var mVoice: VoiceService? = null
 
     private var isWaitingPayload = false
     private var isFolderFromPayload = false
@@ -73,7 +75,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
         when (key_verb) {
             Dictionary.GOTO -> {
                 if(words.isEmpty()){
-                    Toast.makeText(mActivity, "WHICH MUSIC YOU WANT TO JUMP TO?", Toast.LENGTH_LONG).show()
+                    mVoice?.say("Qual música deseja tocar?")
                     isWaitingPayload = true
                     isJumpingPayload = true
                 } else {
@@ -86,7 +88,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                             !mMusicService.isPlaying()) { // if is paused, PLAY again
                         mMusicService.play()
                     } else {
-                        Toast.makeText(mActivity, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
+                        mVoice?.say("O que deseja ouvir?")
                         isWaitingPayload = true
                     }
                 } else{
@@ -101,7 +103,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
             }
             Dictionary.ADD -> {
                 if(words.isEmpty()){
-                    Toast.makeText(mActivity, "WHAT TO ADD?", Toast.LENGTH_LONG).show()
+                    mVoice?.say("O que deseja adicionar à playlist?")
                     isWaitingPayload = true
                     shouldAddPayload = true
                 } else {
@@ -137,7 +139,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                 when(key_verb){
                     Dictionary.GOTO -> {
                         if(words.isEmpty()){
-                            Toast.makeText(mActivity, "WHICH MUSIC YOU WANT TO JUMP TO?", Toast.LENGTH_LONG).show()
+                            mVoice?.say("Qual música deseja tocar?")
                             isWaitingPayload = true
                             isJumpingPayload = true
                         } else {
@@ -152,7 +154,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                                     !mMusicService.isPlaying()){
                                 mMusicService.play()
                             }
-                            Toast.makeText(mActivity, "WHAT TO PLAY?", Toast.LENGTH_LONG).show()
+                            mVoice?.say("O que deseja ouvir?")
                             isWaitingPayload = true
                         }
 
@@ -165,7 +167,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                     }
                     Dictionary.ADD -> {
                         if(words.isEmpty()){
-                            Toast.makeText(mActivity, "WHAT TO ADD?", Toast.LENGTH_LONG).show()
+                            mVoice?.say("O que deseja adicionar à playlist?")
                             isWaitingPayload = true
                             shouldAddPayload = true
                         } else {
@@ -192,7 +194,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                 when(key_verb){
                     Dictionary.ADD -> {
                         if(words.isEmpty()){
-                            Toast.makeText(mActivity, "WHICH FOLDER TO ADD?", Toast.LENGTH_LONG).show()
+                            mVoice?.say("Qual pasta deseja adicionar à playlist?")
                             isWaitingPayload = true
                             isFolderFromPayload = true
                             shouldAddPayload = true
@@ -202,7 +204,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                     }
                     else -> {
                         if(words.isEmpty()){
-                            Toast.makeText(mActivity, "WHICH FOLDER TO PLAY?", Toast.LENGTH_LONG).show()
+                            mVoice?.say("Qual pasta deseja ouvir?")
                             isWaitingPayload = true
                             isFolderFromPayload = true
                         } else {
@@ -216,7 +218,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                         mMusicService.isPlaying()){
                     mMusicService.pause()
                 }
-                Toast.makeText(mActivity, Utils.getCurrentTime(), Toast.LENGTH_LONG).show()
+                mVoice?.say(Utils.getCurrentTime(true))
             }
         }
         return
@@ -245,7 +247,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
                         mMusicService.isPlaying()){
                     mMusicService.pause()
                 }
-                Toast.makeText(mActivity, Utils.getCurrentTime(), Toast.LENGTH_LONG).show()
+                mVoice?.say(Utils.getCurrentTime(true))
             }
             Dictionary.PLAY -> {
                 if(mMusicService.getPlayerState() == MediaPlayerStates.PAUSED &&
@@ -285,12 +287,13 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
         for (musicToGo in MusicLoader.getPlaylistFromPayload(payload, false)) {
             val indexToGo = mMusicService.checkIndexInPlaylist(musicToGo)
             if (indexToGo >= 0) {
-                mMusicService.play(indexToGo)
+                mVoice?.say("É pra já")
+                Handler().postDelayed({ mMusicService.play(indexToGo) }, 800)
                 return
             }
         }
         // If no music was found
-        Toast.makeText(mActivity, "MUSIC IS NOT IN THE PLAYLIST", Toast.LENGTH_LONG).show()
+        mVoice?.say("Está música não está na playlist")
 
     }
 
@@ -300,13 +303,17 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
 
         val playlist = MusicLoader.getPlaylistFromPayload(payload, isFolder)
         if(!playlist.isEmpty()){
-            if(shouldAdd) mMusicService.addToPlaylist(playlist)
+            if(shouldAdd){
+                mVoice?.say("Playlist atualizada")
+                mMusicService.addToPlaylist(playlist)
+            }
             else {
+                mVoice?.say("É pra já")
                 mMusicService.setPlaylist(playlist)
-                mMusicService.play()
+                Handler().postDelayed({ mMusicService.play() }, 800)
             }
         }
-        else Toast.makeText(mActivity, "NOTHING MATCHES WHAT YOU WANT", Toast.LENGTH_LONG).show()
+        else mVoice?.say("Não encontrei nada com o que disse, tente de novo")
     }
 
     private fun getPayload(words: MutableList<String>): String {
@@ -336,7 +343,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
         when(Permissions.checkPermission(mainActivity, Manifest.permission.READ_EXTERNAL_STORAGE)){
             true -> return true
             false -> {
-                Toast.makeText(mainActivity, "CONCEDA A PERMISSÃO E TENTE NOVAMENTE", Toast.LENGTH_LONG).show()
+                mVoice?.say("Conceda a permissão e tente novamente")
             }
         }
         return false
@@ -346,9 +353,13 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService) {
         return when(MusicLoader.allMusic.size > 0){
             true -> true
             false -> {
-                Toast.makeText(mActivity, "NO MUSICS ON THE PHONE", Toast.LENGTH_LONG).show()
+                mVoice?.say("Não existem músicas no dispositivo")
                 false
             }
         }
+    }
+
+    fun setVoiceService(voiceService: VoiceService){
+        if(mVoice == null) mVoice = voiceService
     }
 }

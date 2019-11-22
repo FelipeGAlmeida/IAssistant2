@@ -68,13 +68,15 @@ class Utils {
             return string
         }
 
-        fun getCurrentTime(): String{
+        fun getCurrentTime(asString: Boolean): String{
             val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             val m = Calendar.getInstance().get(Calendar.MINUTE)
             val h_zero = if(h<10) "0" else ""
             val m_zero = if(m<10) "0" else ""
+            val h_s = if(h>1) "s" else ""
+            val m_s = if(m>1) "m" else ""
 
-            return "$h_zero$h:$m_zero$m"
+            return if(asString) "Agora são $h hora$h_s e $m minuto$m_s" else "$h_zero$h:$m_zero$m"
         }
 
         fun enableKeyboard(mainActivity: MainActivity, enable: Boolean, view: View){

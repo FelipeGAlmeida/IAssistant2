@@ -18,7 +18,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/av/ic_shuffle_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/social/ic_sentiment_very_satisfied_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -29,11 +29,11 @@
                         <option name="values">
                           <map>
                             <entry key="color" value="ffffff" />
-                            <entry key="height" value="48" />
-                            <entry key="outputName" value="ic_shuffle_2" />
+                            <entry key="height" value="92" />
+                            <entry key="outputName" value="ic_happiest" />
                             <entry key="overrideSize" value="true" />
                             <entry key="sourceFile" value="C:\Users\(Engenharia) Felipe" />
-                            <entry key="width" value="48" />
+                            <entry key="width" value="92" />
                           </map>
                         </option>
                       </PersistentState>
