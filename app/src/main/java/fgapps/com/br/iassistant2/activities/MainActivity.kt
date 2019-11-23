@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity(),
                     VolumeChangeListener,
                     MediaPlayerListener,
                     TouchListener,
-                    VoiceCommands {
+                    VoiceListener {
 
     /*** Variables ***/
     private lateinit var mMusicService: MusicPlayerService
@@ -57,8 +57,8 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var mDimmer: Dimmer
     private lateinit var mAI: AIService
-    private lateinit var mExternalEvents: ExternalEventsService
     private lateinit var mVoice: VoiceService
+    private var mExternalEvents: ExternalEventsService? = null
 
     private lateinit var mDetector: GestureDetectorCompat
     private lateinit var mGestureController: GestureController
@@ -223,52 +223,60 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun setVoiceView(spoke: String?, tip: String?, listen: String?, state: VoiceStates){
-        when(state){
-            VoiceStates.LISTENING -> {
-                runOnUiThread {
+        runOnUiThread {
+            music_panel.visibility = View.INVISIBLE
+            voice_panel.visibility = View.VISIBLE
+
+            when (state) {
+                VoiceStates.LISTENING -> {
                     earing_img.setImageResource(R.drawable.ic_ear)
                     earing_img.drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
                     earing_img.visibility = View.VISIBLE
+                    voice_txt.text = "Ouvindo..."
+                    tip_txt.text = "Fale seu comando agora"
                     speak_panel.visibility = View.VISIBLE
                 }
-            }
-            VoiceStates.SPEAKING -> {
-                runOnUiThread{
+                VoiceStates.LISTEN -> {
+                    earing_img.drawable.setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN)
+
+                    listen?.let {
+                        listen_panel.visibility = View.VISIBLE
+                        listen_txt.text = it
+                    }
+                }
+                VoiceStates.SPEAKING -> {
                     earing_img.setImageResource(R.drawable.ic_happiest)
-                    earing_img.drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
-                }
+                    earing_img.drawable.setColorFilter(Color.YELLOW, PorterDuff.Mode.SRC_IN)
 
-                spoke?.let {
-                    var speak = it
-                    voice_txt.visibility = View.VISIBLE
-                    if(speak.startsWith("Agora são ")) speak = Utils.getCurrentTime(false)
-                    voice_txt.text = speak
+                    spoke?.let {
+                        var speak = it
+                        speak_panel.visibility = View.VISIBLE
+                        if (speak.startsWith("Agora são ")) speak = Utils.getCurrentTime(false)
+                        voice_txt.text = speak
+                        tip_txt.text = tip
+                    }
                 }
-            }
-            VoiceStates.SUCCESS -> {
-                runOnUiThread{ earing_img.drawable.setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN) }
-
-                listen?.let { // Success for listening
-                    runOnUiThread{ listen_panel.visibility = View.VISIBLE }
-                    listen_txt.text = it
-                    runOnUiThread{ Handler().postDelayed({ listen_panel.visibility = View.INVISIBLE }, 2000) }
-                    return
-                }
-                // Success for speaking
-                runOnUiThread{
-                    speak_panel.visibility = View.INVISIBLE
-                    earing_img.visibility = View.INVISIBLE
+                VoiceStates.SPOKEN -> {
+                    earing_img.visibility = View.GONE
                     listen_panel.visibility = View.INVISIBLE
+                    if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
+                        speak_panel.visibility = View.INVISIBLE
+                    } else {
+                        voice_txt.text = "Toque para interagir"
+                        tip_txt.text = "ou toque duas vezes para digitar"
+                    }
                 }
-            }
-            VoiceStates.ERROR -> {
-                runOnUiThread{
+                VoiceStates.ERROR -> {
                     earing_img.drawable.setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN)
-                    Handler().postDelayed({ earing_img.visibility = View.GONE }, 800)
+                    Handler().postDelayed({
+                        earing_img.visibility = View.GONE
+                        speak_panel.visibility = View.INVISIBLE
+                        voice_panel.visibility = View.INVISIBLE
+                    }, 800)
                 }
-            }
-            else -> {
-                runOnUiThread{ voice_panel.visibility = View.INVISIBLE }
+                else -> {
+                    voice_panel.visibility = View.INVISIBLE
+                }
             }
         }
     }
@@ -278,8 +286,8 @@ class MainActivity : AppCompatActivity(),
         setVoiceView(null, "alguma dica atoa", listen, state)
     }
 
-    override fun onSpeakAction(spoke: String?, state: VoiceStates) {
-        setVoiceView(spoke, "alguma dica atoa", null, state)
+    override fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates) {
+        setVoiceView(spoke, tip, null, state)
     }
 
     /*** Gesture controller response functions ***/
@@ -380,9 +388,13 @@ class MainActivity : AppCompatActivity(),
             MediaPlayerStates.STARTED -> {
                 Animations.fade(this@MainActivity, music_panel, Constants.FADEIN_MUSICS, false)
                 Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEIN_SHUFFLE, false)
+                music_panel.visibility = View.VISIBLE
+                voice_panel.visibility = View.INVISIBLE
             }
             MediaPlayerStates.PAUSED -> {
                 Animations.blink(this@MainActivity, music_panel, Constants.BLINK_PERIOD)
+                music_panel.visibility = View.VISIBLE
+                voice_panel.visibility = View.INVISIBLE
             }
             else -> {}
         }
@@ -457,7 +469,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStop() {
         super.onStop()
-        mExternalEvents.stopExternalMonitoring() // Stop system broadcasts
+        mExternalEvents?.stopExternalMonitoring() // Stop system broadcasts
         unbindService(connection) // Unbinds from local service
         mBound = false
     }

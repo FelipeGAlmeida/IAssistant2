@@ -41,6 +41,7 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
 
     override fun onReadyForSpeech(p0: Bundle?) {
         Log.v("SRG", "READY FOR SPEECH")
+        mAI.onListenAction(null, VoiceStates.LISTENING)
         mActivity.onListenAction(null, VoiceStates.LISTENING)
     }
 
@@ -69,6 +70,7 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
 
     override fun onError(p0: Int) {
         Log.v("SRG", "ON ERROR")
+        mAI.onListenAction(null, VoiceStates.ERROR)
         mActivity.onListenAction(null, VoiceStates.ERROR)
     }
 
@@ -77,27 +79,30 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
             val info = it.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
             info?.let {
                 if(it.isNotEmpty()){
-                    mActivity.onListenAction(it[0], VoiceStates.SUCCESS)
-                    mActivity.runOnUiThread{ Handler().postDelayed({ mAI.checkCommand(it[0])}, 800)}
+                    mActivity.onListenAction(it[0], VoiceStates.LISTEN)
+                    mAI.onListenAction(null, VoiceStates.LISTEN)
+                    mActivity.runOnUiThread{ Handler().postDelayed({ mAI.checkCommand(it[0])}, 500)}
                 }
             }
         }
     }
 
     /*** Speak functions ***/
-    fun say(toSay: String){
+    fun speak(toSay: String, tip: String){
         tts.speak(toSay, TextToSpeech.QUEUE_FLUSH, Bundle.EMPTY, "")
-        mActivity.onSpeakAction(toSay, VoiceStates.SPEAKING)
+        mActivity.onSpeakAction(toSay, tip, VoiceStates.SPEAKING)
     }
 
     override fun onError(p0: String?, p1: Int) {
         Log.v("TTS", "ON ERROR - $p0")
-        mActivity.onSpeakAction(null, VoiceStates.ERROR)
+        mAI.onSpeakAction(null, null, VoiceStates.ERROR)
+        mActivity.onSpeakAction(null, null, VoiceStates.ERROR)
     }
 
     override fun onDone(p0: String?) {
         Log.v("TTS", "ON DONE - $p0")
-        mActivity.onSpeakAction(null, VoiceStates.SUCCESS)
+        mAI.onSpeakAction(null, null, VoiceStates.SPOKEN)
+        mActivity.onSpeakAction(null, null, VoiceStates.SPOKEN)
     }
 
     override fun onStart(p0: String?) {

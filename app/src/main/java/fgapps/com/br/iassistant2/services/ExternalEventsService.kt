@@ -59,8 +59,8 @@ class ExternalEventsService(mainActivity: MainActivity, musicService: MusicPlaye
     override fun onCallStateChanged(state: Int, phoneNumber: String?) {
         when(state){
             TelephonyManager.CALL_STATE_IDLE ->{
-                if(mMusicService.getPlayerPreviousState() == MediaPlayerStates.STARTED)
-                    mMusicService.play()
+//                if(mMusicService.getPlayerPreviousState() == MediaPlayerStates.STARTED)
+//                    mMusicService.play()  //BUG - Called onResume
             }
             else -> mMusicService.pause()
         }

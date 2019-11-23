@@ -33,6 +33,8 @@ class MusicPlayerService : Service(),
     private var mPlaylist_bck = ArrayList<Music>()
     private var music_idx = 0
 
+    private var mVolume = 50F
+
     override fun onCreate() {
         super.onCreate()
         mMediaPlayer = MediaPlayer()
@@ -139,7 +141,18 @@ class MusicPlayerService : Service(),
     }
 
     fun setVolume(value: Float) {
-        mMediaPlayer.setVolume(value, value)
+        mVolume = value
+        mMediaPlayer.setVolume(mVolume, mVolume)
+    }
+
+    fun mixSoundRequest(willPlay: Boolean){
+        if(willPlay){
+            mMediaPlayer.setVolume(0.2F, 0.2F)
+            setState(MediaPlayerStates.MIXING)
+            return
+        }
+        mMediaPlayer.setVolume(mVolume, mVolume)
+        setState(getPlayerPreviousState())
     }
 
     fun shuffle(): Boolean{
