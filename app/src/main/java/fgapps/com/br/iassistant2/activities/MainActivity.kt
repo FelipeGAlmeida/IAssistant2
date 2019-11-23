@@ -26,19 +26,13 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import fgapps.com.br.iassistant2.R
-import fgapps.com.br.iassistant2.defines.Constants
-import fgapps.com.br.iassistant2.defines.Dictionary
+import fgapps.com.br.iassistant2.defines.*
 import fgapps.com.br.iassistant2.gestures.GestureController
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.music.MusicLoader
-import fgapps.com.br.iassistant2.services.MusicPlayerService
 import fgapps.com.br.iassistant2.utils.Animations
-import fgapps.com.br.iassistant2.defines.MediaPlayerStates
-import fgapps.com.br.iassistant2.defines.VoiceStates
 import fgapps.com.br.iassistant2.interfaces.*
-import fgapps.com.br.iassistant2.services.AIService
-import fgapps.com.br.iassistant2.services.ExternalEventsService
-import fgapps.com.br.iassistant2.services.VoiceService
+import fgapps.com.br.iassistant2.services.*
 import fgapps.com.br.iassistant2.utils.Dimmer
 import fgapps.com.br.iassistant2.utils.Permissions
 import fgapps.com.br.iassistant2.utils.Utils
@@ -57,7 +51,8 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var mDimmer: Dimmer
     private lateinit var mAI: AIService
-    private lateinit var mVoice: VoiceService
+    private lateinit var mPanel: PanelService
+    private var mVoice: VoiceService? = null
     private var mExternalEvents: ExternalEventsService? = null
 
     private lateinit var mDetector: GestureDetectorCompat
@@ -70,9 +65,7 @@ class MainActivity : AppCompatActivity(),
     private var mVolumeHandler: Handler? = null
     private var mVolumeShown: Boolean = false
     private var mButtonHandler: Handler? = null
-    private var mButtonShown: Boolean = false
     private var mEditHandler: Handler? = null
-    private var mEditShown: Boolean = false
 
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,6 +73,7 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
 
         setBackground()
+        setPanels()
         setGestures()
         setDimmer()
         setControls()
@@ -109,6 +103,11 @@ class MainActivity : AppCompatActivity(),
 
                 })
                 .into(background)
+    }
+
+    private fun setPanels(){
+        mPanel = PanelService(this, music_panel, voice_panel,
+                controls_panel, typeCommand_panel, shuffle_btn)
     }
 
     private fun setGestures(){
@@ -148,10 +147,8 @@ class MainActivity : AppCompatActivity(),
                     mAI.checkCommand(command_edit.text.toString())
                     command_edit.setText("")
                 }
-                Utils.enableKeyboard(this@MainActivity, false, command_edit)
                 mEditHandler!!.removeCallbacksAndMessages(null)
-                Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEOUT_COMMANDEDIT, true)
-                mEditShown = false
+                mPanel.enablePanel(Panels.NONE)
             }
         })
 
@@ -174,7 +171,6 @@ class MainActivity : AppCompatActivity(),
     private fun setAI(){
         Dictionary.init()
         mAI = AIService(this@MainActivity, mMusicService)
-
         mVoice = VoiceService(this@MainActivity, mAI)
     }
 
@@ -222,16 +218,16 @@ class MainActivity : AppCompatActivity(),
         volume_bar.layoutParams = lp
     }
 
-    private fun setVoiceView(spoke: String?, tip: String?, listen: String?, state: VoiceStates){
+    private fun setVoiceView(spoke: String?, tip: String?, listen: String?, state: VoiceStates, requireAction: Boolean){
         runOnUiThread {
-            music_panel.visibility = View.INVISIBLE
-            voice_panel.visibility = View.VISIBLE
+            mPanel.enablePanel(Panels.VOICE)
 
             when (state) {
                 VoiceStates.LISTENING -> {
                     earing_img.setImageResource(R.drawable.ic_ear)
                     earing_img.drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
                     earing_img.visibility = View.VISIBLE
+                    listen_panel.visibility = View.INVISIBLE
                     voice_txt.text = "Ouvindo..."
                     tip_txt.text = "Fale seu comando agora"
                     speak_panel.visibility = View.VISIBLE
@@ -243,6 +239,8 @@ class MainActivity : AppCompatActivity(),
                         listen_panel.visibility = View.VISIBLE
                         listen_txt.text = it
                     }
+
+                    Handler().postDelayed({ mPanel.enablePanel(Panels.NONE) }, 300)
                 }
                 VoiceStates.SPEAKING -> {
                     earing_img.setImageResource(R.drawable.ic_happiest)
@@ -258,36 +256,44 @@ class MainActivity : AppCompatActivity(),
                 }
                 VoiceStates.SPOKEN -> {
                     earing_img.visibility = View.GONE
-                    listen_panel.visibility = View.INVISIBLE
-                    if (mMusicService.getPlayerState() != MediaPlayerStates.IDLE) {
-                        speak_panel.visibility = View.INVISIBLE
-                    } else {
-                        voice_txt.text = "Toque para interagir"
-                        tip_txt.text = "ou toque duas vezes para digitar"
+                    val tip_spoken = voice_txt.text
+                    voice_txt.text = "Toque para interagir"
+                    if(requireAction){
+                        mPanel.enablePanel(Panels.VOICE)
+                        tip_txt.text = tip_spoken
+                    }
+                    else {
+                        listen_panel.visibility = View.INVISIBLE
+                        mPanel.enablePanel(Panels.NONE)
                     }
                 }
                 VoiceStates.ERROR -> {
                     earing_img.drawable.setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN)
                     Handler().postDelayed({
+                        if(!requireAction){
+                            voice_txt.text = "Toque para interagir"
+                            tip_txt.text = "ou toque duas vezes para digitar"
+                        }
                         earing_img.visibility = View.GONE
-                        speak_panel.visibility = View.INVISIBLE
-                        voice_panel.visibility = View.INVISIBLE
+                        mPanel.enablePanel(Panels.NONE)
                     }, 800)
-                }
-                else -> {
-                    voice_panel.visibility = View.INVISIBLE
                 }
             }
         }
     }
 
-    /*** Voice response functions ***/
-    override fun onListenAction(listen: String?, state: VoiceStates) {
-        setVoiceView(null, "alguma dica atoa", listen, state)
+    fun setMicColor(db: Float){
+        val diference = (20 * (db+2)).toInt()
+        earing_img.drawable.setColorFilter(Color.rgb(255-diference, 255-diference, 255), PorterDuff.Mode.SRC_IN)
     }
 
-    override fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates) {
-        setVoiceView(spoke, tip, null, state)
+    /*** Voice response functions ***/
+    override fun onListenAction(listen: String?, state: VoiceStates) {
+        setVoiceView(null, null, listen, state, false)
+    }
+
+    override fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates, requireAction: Boolean) {
+        setVoiceView(spoke, tip, null, state, requireAction)
     }
 
     /*** Gesture controller response functions ***/
@@ -323,78 +329,65 @@ class MainActivity : AppCompatActivity(),
     override fun singlePress() {
         if(mDimmer.isDimmedDown()) mDimmer.up()
         else {
-            // Should init the Voice Recognition
+            mDimmer.up()
             if(Permissions.checkPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO)){
-                mVoice.listen()
+                when(VoiceService.mStatus){
+                    VoiceStates.LISTENING -> mVoice?.stopAction()
+                    VoiceStates.SPEAKING -> mVoice?.stopAction()
+                    else -> mVoice?.listen()
+                }
             }
         }
     }
 
     override fun longPress() {
-        if(mDimmer.isDimmedDown()) mDimmer.up()
+        mDimmer.up()
 
-        if(mButtonHandler == null){
+        if (mButtonHandler == null) {
             mButtonHandler = Handler()
         }
 
-        if(mMusicService.getPlayerState() != MediaPlayerStates.IDLE)
-            Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEIN_SHUFFLE, !mButtonShown)
-        Animations.fade(this@MainActivity, settings_btn, Constants.FADEIN_BUTTONS, mButtonShown)
-        Animations.fade(this@MainActivity, repeat_btn, Constants.FADEIN_BUTTONS, mButtonShown)
-
-        if(mButtonShown) {
-            mButtonShown = false
+        if (controls_panel.visibility == View.VISIBLE) {
             mButtonHandler!!.removeCallbacksAndMessages(null)
+            mPanel.enablePanel(Panels.NONE)
             return
+        } else {
+            mPanel.enablePanel(Panels.CONTROLS)
+            mButtonHandler!!.postDelayed({ mPanel.enablePanel(Panels.NONE) }, Constants.HIDE_BUTTONS)
         }
-
-        mButtonShown = true
-        mButtonHandler!!.postDelayed(
-                {
-                    Animations.fade(this@MainActivity, settings_btn, Constants.FADEOUT_BUTTONS, mButtonShown)
-                    Animations.fade(this@MainActivity, repeat_btn, Constants.FADEOUT_BUTTONS, mButtonShown)
-                    if(mMusicService.getPlayerState() != MediaPlayerStates.IDLE)
-                        Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEOUT_SHUFFLE, !mButtonShown)
-                    mButtonShown = false
-                },Constants.HIDE_BUTTONS)
     }
 
     override fun doublePress() {
-        if(mDimmer.isDimmedDown()) mDimmer.up()
+        mDimmer.up()
+
+        if(VoiceService.mStatus == VoiceStates.LISTENING) mVoice?.stopAction()
 
         if(mEditHandler == null){
             mEditHandler = Handler()
         }
 
-        if(!mEditShown){
-            Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEIN_COMMANDEDIT, false)
-            Utils.enableKeyboard(this@MainActivity, true, command_edit)
-            mEditShown = true
+        if(typeCommand_panel.visibility == View.INVISIBLE){
+            mPanel.enablePanel(Panels.TYPE)
         } else mEditHandler!!.removeCallbacksAndMessages(null)
 
         mEditHandler!!.postDelayed(
                 {
-                    Animations.fade(this@MainActivity, typeCommand_panel, Constants.FADEOUT_COMMANDEDIT, true)
-                    Utils.enableKeyboard(this@MainActivity, false, command_edit)
+                    mPanel.enablePanel(Panels.NONE)
                     command_edit.setText("")
-                    mEditShown = false
                 }, Constants.HIDE_COMMANDEDIT)
     }
 
     /*** Media Player response functions ***/
     override fun stateChanged(state: MediaPlayerStates) {
-        Animations.stopBlink()
+        Animations.stopBlink(musics_panel)
         when(state){
             MediaPlayerStates.STARTED -> {
-                Animations.fade(this@MainActivity, music_panel, Constants.FADEIN_MUSICS, false)
-                Animations.fade(this@MainActivity, shuffle_btn, Constants.FADEIN_SHUFFLE, false)
-                music_panel.visibility = View.VISIBLE
-                voice_panel.visibility = View.INVISIBLE
+                Animations.fade(this@MainActivity, musics_panel, Constants.FADEIN_MUSICS, false)
+                mPanel.enablePanel(Panels.MUSIC)
             }
             MediaPlayerStates.PAUSED -> {
-                Animations.blink(this@MainActivity, music_panel, Constants.BLINK_PERIOD)
-                music_panel.visibility = View.VISIBLE
-                voice_panel.visibility = View.INVISIBLE
+                mPanel.enablePanel(Panels.MUSIC)
+                Animations.blink(this@MainActivity, musics_panel, Constants.BLINK_PERIOD)
             }
             else -> {}
         }
@@ -417,7 +410,7 @@ class MainActivity : AppCompatActivity(),
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when(requestCode){
             Permissions.REQ_PERMISSION_CODE -> {
-                if(!grantResults.isEmpty()){
+                if(grantResults.isNotEmpty()){
                     grantResults.forEachIndexed{ i, result ->
                         if(permissions[i] == Manifest.permission.READ_EXTERNAL_STORAGE) {
                             if (result == PackageManager.PERMISSION_DENIED)
@@ -469,6 +462,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStop() {
         super.onStop()
+        mVoice?.stopVoiceServices()
         mExternalEvents?.stopExternalMonitoring() // Stop system broadcasts
         unbindService(connection) // Unbinds from local service
         mBound = false

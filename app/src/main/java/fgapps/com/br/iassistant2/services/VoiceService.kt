@@ -21,6 +21,8 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
     private var tts : TextToSpeech
     private var srg : SpeechRecognizer
 
+    companion object { var mStatus = VoiceStates.LISTEN }
+
     init {
         srg = SpeechRecognizer.createSpeechRecognizer(mActivity)
         srg.setRecognitionListener(this@VoiceService)
@@ -40,38 +42,34 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
     }
 
     override fun onReadyForSpeech(p0: Bundle?) {
-        Log.v("SRG", "READY FOR SPEECH")
-        mAI.onListenAction(null, VoiceStates.LISTENING)
-        mActivity.onListenAction(null, VoiceStates.LISTENING)
+        mStatus = VoiceStates.LISTENING
+        mAI.onListenAction(null, mStatus)
+        mActivity.onListenAction(null, mStatus)
     }
 
     override fun onRmsChanged(p0: Float) {
+        mActivity.setMicColor(p0)
     }
 
     override fun onBufferReceived(p0: ByteArray?) {
-        Log.v("SRG", "BUFFER RECEIVED")
     }
 
     override fun onPartialResults(p0: Bundle?) {
-        Log.v("SRG", "PARTIAL RESULTS")
     }
 
     override fun onEvent(p0: Int, p1: Bundle?) {
-        Log.v("SRG", "ON EVENT")
     }
 
     override fun onBeginningOfSpeech() {
-        Log.v("SRG", "ON BEGINNING OF SPEECH")
     }
 
     override fun onEndOfSpeech() {
-        Log.v("SRG", "END OF SPEECH")
     }
 
     override fun onError(p0: Int) {
-        Log.v("SRG", "ON ERROR")
-        mAI.onListenAction(null, VoiceStates.ERROR)
-        mActivity.onListenAction(null, VoiceStates.ERROR)
+        mStatus = VoiceStates.ERROR
+        mAI.onListenAction(null, mStatus)
+        mActivity.onListenAction(null, mStatus)
     }
 
     override fun onResults(results: Bundle?) {
@@ -79,8 +77,9 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
             val info = it.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
             info?.let {
                 if(it.isNotEmpty()){
-                    mActivity.onListenAction(it[0], VoiceStates.LISTEN)
-                    mAI.onListenAction(null, VoiceStates.LISTEN)
+                    mStatus = VoiceStates.LISTEN
+                    mActivity.onListenAction(it[0], mStatus)
+                    mAI.onListenAction(null, mStatus)
                     mActivity.runOnUiThread{ Handler().postDelayed({ mAI.checkCommand(it[0])}, 500)}
                 }
             }
@@ -88,27 +87,41 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
     }
 
     /*** Speak functions ***/
-    fun speak(toSay: String, tip: String){
-        tts.speak(toSay, TextToSpeech.QUEUE_FLUSH, Bundle.EMPTY, "")
-        mActivity.onSpeakAction(toSay, tip, VoiceStates.SPEAKING)
+    fun speak(toSay: String, tip: String, requireAction: Boolean){
+        mStatus = VoiceStates.SPEAKING
+        tts.speak(toSay, TextToSpeech.QUEUE_FLUSH, Bundle.EMPTY, requireAction.toString())
+        mActivity.onSpeakAction(toSay, tip, mStatus, false)
     }
 
     override fun onError(p0: String?, p1: Int) {
-        Log.v("TTS", "ON ERROR - $p0")
-        mAI.onSpeakAction(null, null, VoiceStates.ERROR)
-        mActivity.onSpeakAction(null, null, VoiceStates.ERROR)
+        mStatus = VoiceStates.ERROR
+        val requireAction = p0?.toBoolean() ?: false
+        mAI.onSpeakAction(null, null, mStatus, requireAction)
+        mActivity.onSpeakAction(null, null, mStatus, requireAction)
     }
 
     override fun onDone(p0: String?) {
-        Log.v("TTS", "ON DONE - $p0")
-        mAI.onSpeakAction(null, null, VoiceStates.SPOKEN)
-        mActivity.onSpeakAction(null, null, VoiceStates.SPOKEN)
+        mStatus = VoiceStates.SPOKEN
+        val requireAction = p0?.toBoolean() ?: false
+        mAI.onSpeakAction(null, null, mStatus, requireAction)
+        mActivity.onSpeakAction(null, null, mStatus, requireAction)
     }
 
     override fun onStart(p0: String?) {
-        Log.v("TTS", "ON START - $p0")
     }
 
     override fun onError(p0: String?) { //DEPRECATED, BUT MUST IMPLEMENT (??)
+    }
+
+    fun stopAction(){
+        srg.stopListening()
+        if(tts.isSpeaking)
+            tts.stop()
+        mStatus = VoiceStates.SPOKEN
+    }
+
+    fun stopVoiceServices(){
+        tts.shutdown()
+        srg.destroy()
     }
 }

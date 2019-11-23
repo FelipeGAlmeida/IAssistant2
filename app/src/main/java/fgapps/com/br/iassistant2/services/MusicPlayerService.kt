@@ -63,7 +63,7 @@ class MusicPlayerService : Service(),
         mMediaPlayer.reset()
         setState(MediaPlayerStates.IDLE)
 
-        if (music_idx >= mPlaylist.size) music_idx = 0
+        if (music_idx >= mPlaylist.size || music_idx < 0) music_idx = 0
         val playSong: Music = mPlaylist[music_idx] //Get the MUSIC
         val currSong = playSong.id // Get the ID to take the URI
         val trackUri = ContentUris.withAppendedId( // Get the URI to PLAY the correct file
@@ -148,11 +148,9 @@ class MusicPlayerService : Service(),
     fun mixSoundRequest(willPlay: Boolean){
         if(willPlay){
             mMediaPlayer.setVolume(0.2F, 0.2F)
-            setState(MediaPlayerStates.MIXING)
             return
         }
         mMediaPlayer.setVolume(mVolume, mVolume)
-        setState(getPlayerPreviousState())
     }
 
     fun shuffle(): Boolean{

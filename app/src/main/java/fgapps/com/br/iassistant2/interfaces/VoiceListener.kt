@@ -6,5 +6,6 @@ interface VoiceListener {
 
     fun onListenAction(listen: String?, state: VoiceStates)
 
-    fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates)
+    fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates, requireAction: Boolean)
+
 }

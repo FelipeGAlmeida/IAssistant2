@@ -2,6 +2,7 @@ package fgapps.com.br.iassistant2.services
 
 import android.Manifest
 import android.os.Handler
+import android.util.Log
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Dictionary
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
@@ -61,7 +62,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
             return
         }
 
-        mVoice?.speak("Comando não entendido, tente novamente", "Tente usar palavras chaves como \"OUVIR\", \"MÚSICA\", \"PASTA\" ...")
+        mVoice?.speak("Comando não entendido, tente novamente", "Tente usar palavras chaves como \"OUVIR\", \"MÚSICA\", \"PASTA\" ...", false)
     }
 
     private fun analyseVerb(key_verb: String, words: MutableList<String>){
@@ -83,7 +84,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         when (key_verb) {
             Dictionary.GOTO -> {
                 if(words.isEmpty()){
-                    mVoice?.speak("Qual música deseja tocar?", "Toque novamente e diga o nome da música")
+                    mVoice?.speak("Qual música deseja tocar?", "Toque novamente e diga o nome da música", true)
                     isWaitingPayload = true
                     isJumpingPayload = true
                 } else {
@@ -97,7 +98,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                         //mMusicService.play()
                         mCommand = Dictionary.PLAY
                     } else {
-                        mVoice?.speak("O que deseja ouvir?", "Toque e diga a música ou pasta que quer ouvir")
+                        mVoice?.speak("O que deseja ouvir?", "Toque e diga a música ou pasta que quer ouvir", true)
                         isWaitingPayload = true
                         return
                     }
@@ -115,7 +116,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
             }
             Dictionary.ADD -> {
                 if(words.isEmpty()){
-                    mVoice?.speak("O que deseja adicionar à playlist?", "Toque e diga a música ou pasta que quer adicionar")
+                    mVoice?.speak("O que deseja adicionar à playlist?", "Toque e diga a música ou pasta que quer adicionar", true)
                     isWaitingPayload = true
                     shouldAddPayload = true
                 } else {
@@ -136,7 +137,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                 }
             }
         }
-        runCommand(800)
+        runCommand(300)
         return
     }
 
@@ -155,7 +156,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                 when(key_verb) {
                     Dictionary.GOTO -> {
                         if (words.isEmpty()) {
-                            mVoice?.speak("Qual música deseja tocar?", "Toque novamente e diga o nome da música que deseja tocar agora")
+                            mVoice?.speak("Qual música deseja tocar?", "Toque novamente e diga o nome da música que deseja tocar agora", true)
                             isWaitingPayload = true
                             isJumpingPayload = true
                         } else {
@@ -170,7 +171,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                                 //mMusicService.play()
                                 mCommand = Dictionary.PLAY
                             } else {
-                                mVoice?.speak("O que deseja ouvir?", "Toque e diga a música ou pasta que quer ouvir")
+                                mVoice?.speak("O que deseja ouvir?", "Toque e diga a música ou pasta que quer ouvir", true)
                                 isWaitingPayload = true
                                 return
                             }
@@ -188,7 +189,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                     }
                     Dictionary.ADD -> {
                         if (words.isEmpty()) {
-                            mVoice?.speak("O que deseja adicionar à playlist?", "Toque e diga a música ou pasta que quer adicionar")
+                            mVoice?.speak("O que deseja adicionar à playlist?", "Toque e diga a música ou pasta que quer adicionar", true)
                             isWaitingPayload = true
                             shouldAddPayload = true
                             return
@@ -220,7 +221,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                 when(key_verb){
                     Dictionary.ADD -> {
                         if(words.isEmpty()){
-                            mVoice?.speak("Qual pasta deseja adicionar à playlist?", "Toque e diga a pasta que quer adicionar")
+                            mVoice?.speak("Qual pasta deseja adicionar à playlist?", "Toque e diga a pasta que quer adicionar", true)
                             isWaitingPayload = true
                             isFolderFromPayload = true
                             shouldAddPayload = true
@@ -232,7 +233,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                     }
                     else -> {
                         if(words.isEmpty()){
-                            mVoice?.speak("Qual pasta deseja ouvir?", "Toque e diga a pasta que quer ouvir")
+                            mVoice?.speak("Qual pasta deseja ouvir?", "Toque e diga a pasta que quer ouvir", true)
                             isWaitingPayload = true
                             isFolderFromPayload = true
                             return
@@ -244,11 +245,11 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                 }
             }
             Dictionary.TIME -> {
-                mVoice?.speak(Utils.getCurrentTime(true), "")
+                mVoice?.speak(Utils.getCurrentTime(true), "", false)
                 return
             }
         }
-        runCommand(800)
+        runCommand(300)
         return
     }
 
@@ -274,7 +275,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                 }
             }
             Dictionary.TIME -> {
-                mVoice?.speak(Utils.getCurrentTime(true), "")
+                mVoice?.speak(Utils.getCurrentTime(true), "", false)
                 return
             }
             Dictionary.PLAY -> {
@@ -285,7 +286,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                 }
             }
         }
-        runCommand(800)
+        runCommand(300)
         return
     }
 
@@ -297,13 +298,25 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         }
 
         var isFolder = fromFolder
-        if(!isFolder) { //If is not from folder command, we check to be sure about to be
-            val folder_keys = Dictionary.complements[Dictionary.FOLDER]
-            for (dict in folder_keys!!) {
-                if (mutablePayload.contains(dict)){
-                    mutablePayload = mutablePayload.replace(dict, "").trim()
+        val folder_keys = Dictionary.complements[Dictionary.FOLDER] // Confirm it's folder
+        folder_keys?.let {
+            for (dict in folder_keys) {
+                if (mutablePayload.contains(dict)) {
+                    mutablePayload = mutablePayload.replace(dict, "").trim() // Remove folder words
                     isFolder = true
                     break
+                }
+            }
+        }
+
+        val all_keys = Dictionary.extras[Dictionary.ALL] // Check it's all
+        all_keys?.let {
+            for (dict in all_keys) {
+                if (mutablePayload.startsWith(dict) && mutablePayload.split(" ").size == 1) {
+                    mMusicService.setPlaylist(MusicLoader.allMusic)
+                    mCommand = Dictionary.PLAY
+                    runCommand(300)
+                    return
                 }
             }
         }
@@ -317,7 +330,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         for (musicToGo in MusicLoader.getPlaylistFromPayload(payload, false)) {
             val indexToGo = mMusicService.checkIndexInPlaylist(musicToGo)
             if (indexToGo >= 0) {
-                mVoice?.speak("É pra já", "processando...")
+                mVoice?.speak("É pra já", "processando...", false)
                 //mMusicService.play(indexToGo)
                 mCommand = Dictionary.PLAY
                 mCommandExtras = indexToGo
@@ -325,7 +338,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
             }
         }
         // If no music was found
-        mVoice?.speak("Esta música não está na playlist", "Diga uma música que está na playlist")
+        mVoice?.speak("Esta música não está na playlist", "Diga uma música que está na playlist", false)
     }
 
     private fun addMusicsFromPayloadAndPlay(payload: String, isFolder: Boolean, shouldAdd: Boolean){
@@ -335,18 +348,17 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         val playlist = MusicLoader.getPlaylistFromPayload(payload, isFolder)
         if(!playlist.isEmpty()){
             if(shouldAdd){
-                mVoice?.speak("Playlist atualizada", "Nova(s) música(s) adicionada(s)")
+                mVoice?.speak("Playlist atualizada", "Nova(s) música(s) adicionada(s)", false)
                 mMusicService.addToPlaylist(playlist)
-                mCommand = Dictionary.ADD
             }
             else {
-                mVoice?.speak("É pra já", "processando...")
+                mVoice?.speak("É pra já", "processando...", false)
                 mMusicService.setPlaylist(playlist)
                 //mMusicService.play()
                 mCommand = Dictionary.PLAY
             }
         }
-        else mVoice?.speak("Não encontrei nada com o que disse, tente de novo", "Desculpe, às vezes posso ter entendido errado")
+        else mVoice?.speak("Não encontrei nada com o que disse, tente de novo", "Desculpe, às vezes posso ter entendido errado", false)
     }
 
     private fun getPayload(words: MutableList<String>): String {
@@ -376,7 +388,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         when(Permissions.checkPermission(mainActivity, Manifest.permission.READ_EXTERNAL_STORAGE)){
             true -> return true
             false -> {
-                mVoice?.speak("Conceda a permissão e tente novamente", "Precisamos da permissão para ler as músicas")
+                mVoice?.speak("Conceda a permissão e tente novamente", "Precisamos da permissão para ler as músicas", false)
             }
         }
         return false
@@ -386,7 +398,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         return when(MusicLoader.allMusic.size > 0){
             true -> true
             false -> {
-                mVoice?.speak("Não existem músicas no dispositivo", "Adicione músicas no seu dispositivo")
+                mVoice?.speak("Não existem músicas no dispositivo", "Adicione músicas no seu dispositivo", false)
                 false
             }
         }
@@ -401,20 +413,20 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         else mMusicService.mixSoundRequest(false)
     }
 
-    override fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates) {
+    override fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates, requiredAction: Boolean) {
         mActivity.runOnUiThread { runCommand(0) }
         mMusicService.mixSoundRequest(false)
     }
 
     private fun runCommand(delay: Long) {
         Handler().postDelayed({
+            Log.d("AI", "WILL RUN COMMAND $mCommand")
             when (mCommand) {
                 Dictionary.PLAY -> if (mCommandExtras >= 0) mMusicService.play(mCommandExtras)
                 else mMusicService.play()
                 Dictionary.PAUSE -> mMusicService.pause()
                 Dictionary.NEXT -> mMusicService.next()
                 Dictionary.PREV -> mMusicService.prev()
-                Dictionary.ADD -> mMusicService.play()
             }
             mCommand = ""
             mCommandExtras = -1

@@ -41,13 +41,13 @@ class Utils {
 
             /*** specific corrections ***/
             string = string
-                    .replace("é", "ehh")
+                    .replace("é", "ehh", true)
                     .replace("&", "e")
                     //Commands with composed actions
-                    .replace("ir para", "ir_para")
-                    .replace("pular para", "pular_para")
-                    .replace("go to", "go_to")
-                    .replace("jump to", "jump_to")
+                    .replace("ir para", "ir_para", true)
+                    .replace("pular para", "pular_para", true)
+                    .replace("go to", "go_to", true)
+                    .replace("jump to", "jump_to", true)
 
             if(conjunctions) {
                 string = string

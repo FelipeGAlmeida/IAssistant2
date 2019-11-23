@@ -1,5 +1,5 @@
 package fgapps.com.br.iassistant2.defines
 
 enum class MediaPlayerStates {
-    PREPARING, STARTED, PAUSED, MIXING, IDLE
+    PREPARING, STARTED, PAUSED, IDLE
 }
