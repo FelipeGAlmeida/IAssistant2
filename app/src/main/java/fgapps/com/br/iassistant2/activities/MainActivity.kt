@@ -160,9 +160,14 @@ class MainActivity : AppCompatActivity(),
 
         })
 
-        repeat_btn.setOnClickListener(object: View.OnClickListener{
+        playControl_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
-
+                if(mBound) {
+                    if(mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.STARTED)
+                        mMusicService.pause()
+                    else if(!mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.PAUSED)
+                        mMusicService.play()
+                }
             }
 
         })
