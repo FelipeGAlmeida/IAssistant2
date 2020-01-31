@@ -9,8 +9,11 @@ import android.speech.RecognizerIntent
 import android.content.Intent
 import android.os.Handler
 import android.speech.tts.TextToSpeech
-import android.util.Log
+import android.speech.tts.Voice
 import fgapps.com.br.iassistant2.defines.VoiceStates
+import fgapps.com.br.iassistant2.utils.ShPrefs
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class VoiceService(mainActivity: MainActivity, aiService: AIService): RecognitionListener, UtteranceProgressListener() {
@@ -20,6 +23,9 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
 
     var tts : TextToSpeech
     var srg : SpeechRecognizer
+
+    private lateinit var mVoiceList: ArrayList<Voice>
+    private lateinit var mVoiceName: ArrayList<String>
 
     companion object {
         var mStatus = VoiceStates.LISTEN
@@ -35,6 +41,8 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
 
         mAI.setVoiceService(this@VoiceService)
         instance = this@VoiceService
+
+        Handler().postDelayed({loadVoices()}, 1000)
     }
 
     /*** Listen functions ***/
@@ -92,9 +100,19 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
 
     /*** Speak functions ***/
     fun speak(toSay: String, tip: String, requireAction: Boolean){
-        mStatus = VoiceStates.SPEAKING
-        tts.speak(toSay, TextToSpeech.QUEUE_FLUSH, Bundle.EMPTY, requireAction.toString())
-        mActivity.onSpeakAction(toSay, tip, mStatus, false)
+        if(ShPrefs.loadFeedbackPreference(mActivity)) {
+            mStatus = VoiceStates.SPEAKING
+            tts.speak(toSay, TextToSpeech.QUEUE_FLUSH, Bundle.EMPTY, requireAction.toString())
+            mActivity.onSpeakAction(toSay, tip, mStatus, false)
+        } else {
+            mStatus = VoiceStates.SPEAKING
+            mActivity.onSpeakAction(toSay, null, mStatus, requireAction)
+            Handler().postDelayed({
+                mStatus = VoiceStates.SPOKEN
+                mAI.onSpeakAction(null, null, mStatus, requireAction)
+                mActivity.onSpeakAction(null, null, mStatus, requireAction)
+            },800)
+        }
     }
 
     override fun onError(p0: String?, p1: Int) {
@@ -127,5 +145,46 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
     fun stopVoiceServices(){
         tts.shutdown()
         srg.destroy()
+    }
+
+    /*** Voices ***/
+    fun loadVoices() {
+        val voices = tts.voices ?: return
+
+        mVoiceName = ArrayList()
+        mVoiceList = ArrayList()
+
+        var n = 0
+        if(voices.size > 0) {
+            for (voice in voices) {
+                if (voice.locale == Locale.getDefault() && !voice.isNetworkConnectionRequired) {
+                    var extra = "Mulher"
+                    val index = voice.name.indexOf("#") + 1 // After the '#' char the name specifies the gender
+                    if (index == 0 && !mVoiceName.contains("Padrão")) {
+                        mVoiceName.add(0, "Padrão") // If no gender is found (-1), means it is the default one
+                        mVoiceList.add(0, voice)
+                    } else {
+                        n++
+                        if (voice.name[index] == 'm') {
+                            extra = "Homem"
+                        }
+                        mVoiceName.add("Opção $n - $extra")
+                        mVoiceList.add(voice)
+                    }
+                }
+            }
+
+            tts.voice = mVoiceList[ShPrefs.loadVoicePreference(mActivity)]
+        } else {
+            mVoiceName.add("Nenhuma voz encontrada")
+        }
+    }
+
+    fun getVoices(): ArrayList<Voice> {
+        return mVoiceList
+    }
+
+    fun getVoiceNames(): ArrayList<String> {
+        return mVoiceName
     }
 }

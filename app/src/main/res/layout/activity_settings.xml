@@ -101,12 +101,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:layout_marginTop="4dp"
                 android:layout_marginEnd="4dp"
                 android:text='Aqui você pode escolher a voz que mais te agrada para curtir seu aplicativo. Caso não tenha vozes disponíveis, é altamente recomendavel que as baixe tocando no botão ao lado e escolhendo a opção "Instalar dados de voz".'
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/settings_txt" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/s2_txt"
@@ -147,7 +146,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:layout_marginEnd="8dp"
-                android:text="Ligado"
+                android:text="Desligado"
                 app:layout_constraintEnd_toStartOf="@+id/swt_feedback"
                 app:layout_constraintTop_toBottomOf="@+id/s2_txt" />
 

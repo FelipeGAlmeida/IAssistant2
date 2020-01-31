@@ -268,6 +268,8 @@ class MainActivity : AppCompatActivity(),
                         tip_txt.text = tip_spoken
                     }
                     else {
+                        if(tip_txt.text == "")
+                            tip_txt.text = "ou toque duas vezes para digitar"
                         listen_panel.visibility = View.INVISIBLE
                         mPanel.enablePanel(Panels.NONE)
                     }
