@@ -18,10 +18,13 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
     private val mActivity = mainActivity
     private val mAI = aiService
 
-    private var tts : TextToSpeech
-    private var srg : SpeechRecognizer
+    var tts : TextToSpeech
+    var srg : SpeechRecognizer
 
-    companion object { var mStatus = VoiceStates.LISTEN }
+    companion object {
+        var mStatus = VoiceStates.LISTEN
+        var instance: VoiceService? = null
+    }
 
     init {
         srg = SpeechRecognizer.createSpeechRecognizer(mActivity)
@@ -31,6 +34,7 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
         tts.setOnUtteranceProgressListener(this@VoiceService)
 
         mAI.setVoiceService(this@VoiceService)
+        instance = this@VoiceService
     }
 
     /*** Listen functions ***/

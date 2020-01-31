@@ -7,17 +7,164 @@
     android:background="@android:color/black"
     tools:context=".activities.SettingsActivity">
 
+    <ImageButton
+        android:id="@+id/back_btn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="@+id/settings_txt"
+        app:layout_constraintDimensionRatio="h,1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settings_txt"
+        app:srcCompat="@drawable/ic_back" />
+
     <TextView
         android:id="@+id/settings_txt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
         android:text="Settings"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settings_txt">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/inner_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            tools:context=".activities.SettingsActivity">
+
+            <Switch
+                android:id="@+id/swt_feedback"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:checked="true"
+                android:showText="false"
+                android:textIsSelectable="false"
+                android:thumbTint="@drawable/thumb_mod1"
+                android:thumbTintMode="src_in"
+                android:trackTint="@drawable/track_mod1"
+                app:layout_constraintEnd_toStartOf="@+id/textView3"
+                app:layout_constraintTop_toBottomOf="@+id/s2_txt" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Voz:"
+                app:layout_constraintBottom_toBottomOf="@+id/spn_voices"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/spn_voices" />
+
+            <Spinner
+                android:id="@+id/spn_voices"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/button_mod1"
+                android:popupBackground="@drawable/drop_mod1"
+                app:layout_constraintBottom_toBottomOf="@+id/tts_btn"
+                app:layout_constraintEnd_toStartOf="@+id/tts_btn"
+                app:layout_constraintStart_toEndOf="@+id/textView"
+                app:layout_constraintTop_toTopOf="@+id/tts_btn" />
+
+            <ImageButton
+                android:id="@+id/tts_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/button_mod1"
+                android:text="DWL"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/s1_txt"
+                app:srcCompat="@drawable/ic_download_24dp" />
+
+            <TextView
+                android:id="@+id/s1_txt"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="4dp"
+                android:text='Aqui você pode escolher a voz que mais te agrada para curtir seu aplicativo. Caso não tenha vozes disponíveis, é altamente recomendavel que as baixe tocando no botão ao lado e escolhendo a opção "Instalar dados de voz".'
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/settings_txt" />
+
+            <TextView
+                android:id="@+id/s2_txt"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="4dp"
+                android:text="Aqui você pode ligar ou desligar os feedbacks de voz, caso não queira ou precise mais ouvir o assistente."
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/spn_voices" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:text="Feedback de voz:"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/s2_txt" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:text="Ligado"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/s2_txt" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:text="Ligado"
+                app:layout_constraintEnd_toStartOf="@+id/swt_feedback"
+                app:layout_constraintTop_toBottomOf="@+id/s2_txt" />
+
+            <TextView
+                android:id="@+id/end_txt"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="500dp"
+                android:layout_marginEnd="4dp"
+                android:text="Versão do Aplicativo: 1.0.0 alpha"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/spn_voices" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
