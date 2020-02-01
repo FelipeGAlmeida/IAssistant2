@@ -414,8 +414,9 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
     }
 
     override fun onSpeakAction(spoke: String?, tip: String?, state: VoiceStates, requiredAction: Boolean) {
+        if(state == VoiceStates.SPEAKING) mMusicService.mixSoundRequest(true)
+        else mMusicService.mixSoundRequest(false)
         mActivity.runOnUiThread { runCommand(0) }
-        mMusicService.mixSoundRequest(false)
     }
 
     private fun runCommand(delay: Long) {

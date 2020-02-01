@@ -334,14 +334,16 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun singlePress() {
-        if(mDimmer.isDimmedDown()) mDimmer.up()
-        else {
-            mDimmer.up()
-            if(Permissions.checkPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO)){
-                when(VoiceService.mStatus){
-                    VoiceStates.LISTENING -> mVoice?.stopAction()
-                    VoiceStates.SPEAKING -> mVoice?.stopAction()
-                    else -> mVoice?.listen()
+        if(splashscreen_panel.visibility == View.INVISIBLE) { // Wait splashscreen disappear
+            if (mDimmer.isDimmedDown()) mDimmer.up()
+            else {
+                mDimmer.up()
+                if (Permissions.checkPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO)) {
+                    when (VoiceService.mStatus) {
+                        VoiceStates.LISTENING -> mVoice?.stopAction()
+                        VoiceStates.SPEAKING -> mVoice?.stopAction()
+                        else -> mVoice?.listen()
+                    }
                 }
             }
         }
