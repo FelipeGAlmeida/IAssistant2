@@ -1,7 +1,5 @@
 package fgapps.com.br.iassistant2.services
 
-import android.os.Handler
-import android.util.Log
 import android.view.View
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Panels
@@ -23,25 +21,27 @@ class PanelService(
     private val mTypePanel = typePanel
     private val mShufflePanel = shufflePanel
 
-    private var mCurrentPanel = Panels.VOICE
-    private var mPreviousPanel = Panels.NONE
+    private val mPanelQueue = arrayListOf(Panels.VOICE) //Panel FIFO Queue
+
+    private var mCurrentPanel = Panels.NONE
 
     fun enablePanel(panel: Panels){
-        mCurrentPanel = panel
-        Log.d("PANELS ", "CURR PANEL: ${this.mCurrentPanel}")
-        if(mPreviousPanel == Panels.NONE) mPreviousPanel = this.mCurrentPanel
+        if(panel != mPanelQueue[0]) {
+            if (panel != Panels.BACK)
+                mPanelQueue.add(0, panel)
+            else enablePreviousPanel()
+        }
 
+        mCurrentPanel = mPanelQueue[0]
         enableMusicPanel(mCurrentPanel == Panels.MUSIC)
         enableVoicePanel(mCurrentPanel == Panels.VOICE)
         enableControlsPanel(mCurrentPanel == Panels.CONTROLS)
         enableTypePanel(mCurrentPanel == Panels.TYPE)
         enableShufflePanel(mCurrentPanel == Panels.SHUFFLE || mCurrentPanel == Panels.MUSIC)
-
-        if(mCurrentPanel == Panels.NONE) enablePanel(mPreviousPanel)
     }
 
     private fun enableMusicPanel(enable: Boolean){
-        if(checkWillBeChanged(mMusicPanel, Panels.MUSIC, enable)) {
+        if(checkWillBeChanged(mMusicPanel, enable)) {
             mMusicPanel.visibility = when (enable) {
                 true -> View.VISIBLE
                 false -> View.INVISIBLE
@@ -50,7 +50,7 @@ class PanelService(
     }
 
     private fun enableVoicePanel(enable: Boolean){
-        if(checkWillBeChanged(mVoicePanel, Panels.VOICE, enable)) {
+        if(checkWillBeChanged(mVoicePanel, enable)) {
             mVoicePanel.visibility = when (enable) {
                 true -> View.VISIBLE
                 false -> View.INVISIBLE
@@ -59,7 +59,7 @@ class PanelService(
     }
 
     private fun enableControlsPanel(enable: Boolean){
-        if(checkWillBeChanged(mControlsPanel, Panels.CONTROLS, enable)) {
+        if(checkWillBeChanged(mControlsPanel, enable)) {
             mControlsPanel.visibility = when (enable) {
                 true -> View.VISIBLE
                 false -> View.INVISIBLE
@@ -68,7 +68,7 @@ class PanelService(
     }
 
     private fun enableTypePanel(enable: Boolean){
-        if(checkWillBeChanged(mTypePanel, Panels.TYPE, enable)) {
+        if(checkWillBeChanged(mTypePanel, enable)) {
             mTypePanel.visibility = when (enable) {
                 true -> {
                     Utils.enableKeyboard(mActivity, true, mTypePanel)
@@ -83,7 +83,7 @@ class PanelService(
     }
 
     private fun enableShufflePanel(enable: Boolean){
-        if(checkWillBeChanged(mShufflePanel, Panels.MUSIC, enable)) {
+        if(checkWillBeChanged(mShufflePanel, enable)) {
             mShufflePanel.visibility = when (enable) {
                 true -> View.VISIBLE
                 false -> View.INVISIBLE
@@ -91,20 +91,19 @@ class PanelService(
         }
     }
 
-    private fun checkWillBeChanged(view: View, panel: Panels, visible: Boolean): Boolean{
+    private fun checkWillBeChanged(view: View, visible: Boolean): Boolean{
         if(view.visibility == View.INVISIBLE && visible) // Will become visible
             return true
         if(view.visibility == View.VISIBLE && !visible) { // Will become invisible
-            if(panel != Panels.CONTROLS && panel != Panels.TYPE && panel != Panels.NONE && panel != Panels.VOICE){
-                mPreviousPanel = panel
-            }
             return true
         }
         return false
     }
 
     private fun enablePreviousPanel(){
-        enablePanel(mPreviousPanel)
+        if(mPanelQueue.size > 1)
+            mPanelQueue.removeAt(0)
+        enablePanel(mPanelQueue[0])
     }
 
 }

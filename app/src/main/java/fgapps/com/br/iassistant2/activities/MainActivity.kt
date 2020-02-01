@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity(),
                     command_edit.setText("")
                 }
                 mEditHandler!!.removeCallbacksAndMessages(null)
-                mPanel.enablePanel(Panels.NONE)
+                mPanel.enablePanel(Panels.BACK)
             }
         })
 
@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity(),
                         listen_txt.text = it
                     }
 
-                    Handler().postDelayed({ mPanel.enablePanel(Panels.NONE) }, 300)
+                    Handler().postDelayed({ mPanel.enablePanel(Panels.BACK) }, 300)
                 }
                 VoiceStates.SPEAKING -> {
                     earing_img.setImageResource(R.drawable.ic_happiest)
@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity(),
                         if(tip_txt.text == "")
                             tip_txt.text = "ou toque duas vezes para digitar"
                         listen_panel.visibility = View.INVISIBLE
-                        mPanel.enablePanel(Panels.NONE)
+                        mPanel.enablePanel(Panels.BACK)
                     }
                 }
                 VoiceStates.ERROR -> {
@@ -282,7 +282,7 @@ class MainActivity : AppCompatActivity(),
                             tip_txt.text = "ou toque duas vezes para digitar"
                         }
                         earing_img.visibility = View.GONE
-                        mPanel.enablePanel(Panels.NONE)
+                        mPanel.enablePanel(Panels.BACK)
                     }, 800)
                 }
             }
@@ -356,11 +356,11 @@ class MainActivity : AppCompatActivity(),
 
         if (controls_panel.visibility == View.VISIBLE) {
             mButtonHandler!!.removeCallbacksAndMessages(null)
-            mPanel.enablePanel(Panels.NONE)
+            mPanel.enablePanel(Panels.BACK)
             return
         } else {
             mPanel.enablePanel(Panels.CONTROLS)
-            mButtonHandler!!.postDelayed({ mPanel.enablePanel(Panels.NONE) }, Constants.HIDE_BUTTONS)
+            mButtonHandler!!.postDelayed({ mPanel.enablePanel(Panels.BACK) }, Constants.HIDE_BUTTONS)
         }
     }
 
@@ -379,7 +379,7 @@ class MainActivity : AppCompatActivity(),
 
         mEditHandler!!.postDelayed(
                 {
-                    mPanel.enablePanel(Panels.NONE)
+                    mPanel.enablePanel(Panels.BACK)
                     command_edit.setText("")
                 }, Constants.HIDE_COMMANDEDIT)
     }

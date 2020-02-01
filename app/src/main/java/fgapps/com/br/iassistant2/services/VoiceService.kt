@@ -111,7 +111,7 @@ class VoiceService(mainActivity: MainActivity, aiService: AIService): Recognitio
                 mStatus = VoiceStates.SPOKEN
                 mAI.onSpeakAction(null, null, mStatus, requireAction)
                 mActivity.onSpeakAction(null, null, mStatus, requireAction)
-            },800)
+            },1150)
         }
     }
 
