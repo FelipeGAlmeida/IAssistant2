@@ -10,7 +10,9 @@ import fgapps.com.br.iassistant2.defines.VoiceStates
 import fgapps.com.br.iassistant2.interfaces.VoiceListener
 import fgapps.com.br.iassistant2.music.MusicLoader
 import fgapps.com.br.iassistant2.utils.Permissions
+import fgapps.com.br.iassistant2.utils.ShPrefs
 import fgapps.com.br.iassistant2.utils.Utils
+import java.lang.NumberFormatException
 import java.util.*
 
 class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): VoiceListener {
@@ -82,6 +84,10 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         }
 
         when (key_verb) {
+            Dictionary.LOAD -> {
+                mVoice?.speak("É pra já", "processando", false)
+                playPreviousPlaylist()
+            }
             Dictionary.GOTO -> {
                 if(words.isEmpty()){
                     mVoice?.speak("Qual música deseja tocar?", "Toque novamente e diga o nome da música", true)
@@ -154,6 +160,10 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         when (key_comp) {
             Dictionary.MUSIC -> {
                 when(key_verb) {
+                    Dictionary.LOAD -> {
+                        mVoice?.speak("É pra já", "processando", false)
+                        playPreviousPlaylist()
+                    }
                     Dictionary.GOTO -> {
                         if (words.isEmpty()) {
                             mVoice?.speak("Qual música deseja tocar?", "Toque novamente e diga o nome da música que deseja tocar agora", true)
@@ -322,6 +332,30 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
         }
 
         addMusicsFromPayloadAndPlay(mutablePayload, isFolder, shouldAdd)
+    }
+
+    fun playPreviousPlaylist(){
+        if(!hasStoragePermission(mActivity)) return
+        val playlistIds = ArrayList<Long>()
+        var music_index = 0
+
+        val stringIds = ShPrefs.loadLastPlayed(mActivity)
+        if(stringIds != null){
+            var arrayIds = stringIds.split("@@")
+            music_index = arrayIds[0].toInt()
+            arrayIds = arrayIds[1].split("##")
+            for (id in arrayIds){
+                try {
+                    playlistIds.add(id.toLong())
+                } catch (e: NumberFormatException){
+                    continue
+                }
+            }
+        }
+
+        mMusicService.setPlaylist(MusicLoader.getPlaylistFromIds(playlistIds))
+        mCommand = Dictionary.PLAY
+        mCommandExtras = music_index
     }
 
     private fun playSpecificSong(payload: String){

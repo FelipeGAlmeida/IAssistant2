@@ -11,6 +11,7 @@ class Dictionary {
         const val PREV = "PREV"
         const val ADD = "ADD"
         const val GOTO = "GOTO"
+        const val LOAD = "LOAD"
         const val MUSIC = "MUSIC"
         const val FOLDER = "FOLDER"
         const val ALL = "ALL"
@@ -23,6 +24,10 @@ class Dictionary {
 
         fun init() {
             /* ***** Actions ***** */
+            val a_load = arrayListOf("recarrega", "carrega")
+            a_load += arrayListOf("reload", "load")
+            actions[LOAD] = a_load
+
             val a_goto = arrayListOf("ir_para", "pular_para")
             a_goto += arrayListOf("go_to", "jump_to")
             actions[GOTO] = a_goto

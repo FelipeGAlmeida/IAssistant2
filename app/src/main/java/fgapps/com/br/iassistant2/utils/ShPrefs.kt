@@ -39,6 +39,22 @@ object ShPrefs {
         return instance.getBoolean("FEEDBACK", true)
     }
 
+    // PLAYLIST IDS
+
+    fun saveLastPlayed(context: Context, playlistIds: String){
+        init(context)
+        val editor = instance.edit()
+        editor.putString("PLAYED", playlistIds)
+        editor.apply()
+    }
+
+    fun loadLastPlayed(context: Context): String?{
+        init(context)
+        return instance.getString("PLAYED", null)
+    }
+
+
+
 
 
 }

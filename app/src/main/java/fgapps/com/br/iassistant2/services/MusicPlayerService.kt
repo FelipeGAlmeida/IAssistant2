@@ -13,7 +13,7 @@ import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.utils.Utils
-import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MusicPlayerService : Service(),
@@ -84,6 +84,14 @@ class MusicPlayerService : Service(),
         mPlaylist = playlist
         mShuffle = false
         setState(MediaPlayerStates.IDLE) // If we set the Playlist, we need to restart the player
+    }
+
+    fun getPlaylist(): ArrayList<Music>{
+        return mPlaylist
+    }
+
+    fun getCurrentMusicIndex(): Int{
+        return music_idx
     }
 
     fun addToPlaylist(playlist: ArrayList<Music>) {

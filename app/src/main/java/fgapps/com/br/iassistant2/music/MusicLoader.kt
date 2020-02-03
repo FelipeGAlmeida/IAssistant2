@@ -51,6 +51,14 @@ class MusicLoader {
             }
         }
 
+        fun getPlaylistFromIds(ids: ArrayList<Long>): ArrayList<Music>{
+            val playlist = ArrayList<Music>()
+            for(id in ids){
+                playlist.add(allMusic[allMusic.indexOf(Music(id, "", "", "", ""))])
+            }
+            return playlist
+        }
+
         /* ***** Get a playlist based on specific input ***** */
         fun getPlaylistFromPayload(payload: String, isFolder: Boolean): ArrayList<Music>{
 

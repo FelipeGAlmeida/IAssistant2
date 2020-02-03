@@ -30,12 +30,9 @@ import fgapps.com.br.iassistant2.defines.*
 import fgapps.com.br.iassistant2.gestures.GestureController
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.music.MusicLoader
-import fgapps.com.br.iassistant2.utils.Animations
 import fgapps.com.br.iassistant2.interfaces.*
 import fgapps.com.br.iassistant2.services.*
-import fgapps.com.br.iassistant2.utils.Dimmer
-import fgapps.com.br.iassistant2.utils.Permissions
-import fgapps.com.br.iassistant2.utils.Utils
+import fgapps.com.br.iassistant2.utils.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),
@@ -166,7 +163,10 @@ class MainActivity : AppCompatActivity(),
                     if(mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.STARTED)
                         mMusicService.pause()
                     else if(!mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.PAUSED)
-                        mMusicService.play()
+                        if(mMusicService.getPlaylist().size > 0)
+                            mMusicService.play()
+                        else
+                            mAI.playPreviousPlaylist()
                 }
             }
 
@@ -475,5 +475,16 @@ class MainActivity : AppCompatActivity(),
         mExternalEvents?.stopExternalMonitoring() // Stop system broadcasts
         unbindService(connection) // Unbinds from local service
         mBound = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        var playlistIds = "${mMusicService.getCurrentMusicIndex()}@@"
+        for(music in mMusicService.getPlaylist()){
+            playlistIds += "${music.id}##"
+        }
+
+        ShPrefs.saveLastPlayed(applicationContext, playlistIds)
     }
 }
