@@ -21,6 +21,8 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var voiceList: ArrayList<Voice>
 
+    private var canSpeak: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
@@ -40,14 +42,15 @@ class SettingsActivity : AppCompatActivity() {
 
         spn_voices.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, p3: Long) {
-                if(voiceList.size > 0) {
+                if(voiceList.size > 0 && canSpeak) {
                     VoiceService.instance?.let {
                         it.tts.voice = voiceList[position]
-                        it.tts.speak("Olá, essa é a voz que você escolheu. Obrigado",
+                        it.tts.speak("Oi, esse é um exemplo da voz que você selecionou. Obrigado",
                                 TextToSpeech.QUEUE_FLUSH, Bundle.EMPTY, "teste de voz")
                         ShPrefs.saveVoicePreference(applicationContext, position)
                     }
                 }
+                canSpeak = true
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) { //Unused
