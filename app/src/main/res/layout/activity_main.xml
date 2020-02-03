@@ -15,24 +15,24 @@
         android:layout_height="match_parent"
         android:background="@color/colorPrimaryDark"
         android:elevation="10dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="wrap_content"
+        <ImageView
+            android:id="@+id/splash_img"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="IAssistant 2.0"
-            android:textSize="36sp"
-            android:textStyle="bold|italic"
+            android:layout_marginStart="48dp"
+            android:layout_marginEnd="48dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.25"
+            app:srcCompat="@drawable/splash_image" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
