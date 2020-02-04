@@ -12,6 +12,7 @@ import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.Constants
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.utils.Utils
+import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.concurrent.timerTask
 
@@ -67,7 +68,11 @@ class ExternalEventsService(mainActivity: MainActivity, musicService: MusicPlaye
     }
 
     fun stopExternalMonitoring(){
-        mActivity.unregisterReceiver(receiver)
+        try {
+            mActivity.unregisterReceiver(receiver)
+        } catch (e: IllegalArgumentException){
+            //Just caught, go ahead
+        }
     }
 
     init {
@@ -80,7 +85,7 @@ class ExternalEventsService(mainActivity: MainActivity, musicService: MusicPlaye
 
         // Calls monitoring
         val tm = mActivity.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        tm.listen(this, PhoneStateListener.LISTEN_CALL_STATE)
+        tm.listen(this, LISTEN_CALL_STATE)
     }
 
 }

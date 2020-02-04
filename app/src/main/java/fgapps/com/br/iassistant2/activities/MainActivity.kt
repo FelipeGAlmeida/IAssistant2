@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity(),
         shuffle_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
                 if(mBound) setShuffleView(mMusicService.shuffle())
+                //else Toast.makeText(applicationContext, "SERVICE NOT BOUNDED", Toast.LENGTH_LONG).show()
             }
         })
 
@@ -143,7 +144,7 @@ class MainActivity : AppCompatActivity(),
                 if(mBound) {
                     mAI.checkCommand(command_edit.text.toString())
                     command_edit.setText("")
-                }
+                } //else Toast.makeText(applicationContext, "SERVICE NOT BOUNDED", Toast.LENGTH_LONG).show()
                 mEditHandler!!.removeCallbacksAndMessages(null)
                 mPanel.enablePanel(Panels.BACK)
             }
@@ -160,14 +161,15 @@ class MainActivity : AppCompatActivity(),
         playControl_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
                 if(mBound) {
-                    if(mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.STARTED)
+                    if(mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.STARTED) {
                         mMusicService.pause()
-                    else if(!mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.PAUSED)
-                        if(mMusicService.getPlaylist().size > 0)
-                            mMusicService.play()
-                        else
-                            mAI.playPreviousPlaylist()
-                }
+                        return
+                    } else if(!mMusicService.isPlaying() && mMusicService.getPlayerState() == MediaPlayerStates.PAUSED) {
+                        mMusicService.play()
+                        return
+                    }
+                    mAI.playPreviousPlaylist()
+                } //else Toast.makeText(applicationContext, "SERVICE NOT BOUNDED", Toast.LENGTH_LONG).show()
             }
 
         })
@@ -184,7 +186,10 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if(!mBound) return false
+        if(!mBound){
+            //Toast.makeText(applicationContext, "SERVICE NOT BOUNDED", Toast.LENGTH_LONG).show()
+            return false
+        }
         return if (mDetector.onTouchEvent(event)) {
             true
         } else {
@@ -331,6 +336,7 @@ class MainActivity : AppCompatActivity(),
 
         setVolumeViews(volume)
         if(mBound) mMusicService.setVolume(volume)
+        //else Toast.makeText(applicationContext, "SERVICE NOT BOUNDED", Toast.LENGTH_LONG).show()
     }
 
     override fun singlePress() {
@@ -448,10 +454,12 @@ class MainActivity : AppCompatActivity(),
             startMonitoringExternalEvents()
 
             mBound = true
+            //Toast.makeText(applicationContext, "SERVICE BOUNDED", Toast.LENGTH_LONG).show()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             mBound = false
+            //Toast.makeText(applicationContext, "SERVICE UNBOUND", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -469,16 +477,9 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
         mVoice?.stopVoiceServices()
         mExternalEvents?.stopExternalMonitoring() // Stop system broadcasts
-        unbindService(connection) // Unbinds from local service
-        mBound = false
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
 
         var playlistIds = "${mMusicService.getCurrentMusicIndex()}@@"
         for(music in mMusicService.getPlaylist()){
@@ -486,5 +487,9 @@ class MainActivity : AppCompatActivity(),
         }
 
         ShPrefs.saveLastPlayed(applicationContext, playlistIds)
+        unbindService(connection) // Unbinds from local service
+        mBound = false
+
+        super.onDestroy()
     }
 }
