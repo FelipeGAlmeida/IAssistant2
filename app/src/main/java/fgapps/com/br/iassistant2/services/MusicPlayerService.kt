@@ -26,6 +26,8 @@ import android.graphics.PixelFormat
 import android.view.*
 import android.widget.ImageButton
 import fgapps.com.br.iassistant2.R
+import fgapps.com.br.iassistant2.utils.ShPrefs
+import kotlin.math.abs
 
 
 class MusicPlayerService : Service(),
@@ -50,6 +52,43 @@ class MusicPlayerService : Service(),
 
     private var mVolume = 50F
 
+    /*** Declarations ***/
+
+    val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT)
+
+    private val touchListener = object : View.OnTouchListener {
+        var initialX: Int = 0
+        var initialY: Int = 0
+        private var initialTouchX: Float = 0.toFloat()
+        private var initialTouchY: Float = 0.toFloat()
+
+        override fun onTouch(v: View, event: MotionEvent): Boolean {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialX = params.x
+                    initialY = params.y
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                }
+                MotionEvent.ACTION_UP -> {
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    params.x = initialX + (event.rawX - initialTouchX).toInt()
+                    params.y = initialY + (event.rawY - initialTouchY).toInt()
+                    windowManager!!.updateViewLayout(floatingControl, params)
+                }
+            }
+            return false
+        }
+    }
+
+    /*** Functions ***/
+
     override fun onCreate() {
         super.onCreate()
         mMediaPlayer = MediaPlayer()
@@ -58,19 +97,25 @@ class MusicPlayerService : Service(),
 
     @SuppressLint("ClickableViewAccessibility")
     fun initFloatingControl(enable: Boolean) {
+        val floatingOption = ShPrefs.loadFloatingPreference(applicationContext)
         if(mPlaylist.size == 0) return
-        if(enable) {
+        if(enable && floatingOption != R.id.floatOff_rbt) {
             if (floatingControl == null) {
                 windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
                 val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-                floatingControl = inflater.inflate(R.layout.floating_control, null, true)
+                floatingControl = when(floatingOption) {
+                    R.id.floatH_rbt -> inflater.inflate(R.layout.floating_control_h, null, true)
+                    else -> inflater.inflate(R.layout.floating_control_v, null, true)
+                }
 
                 (floatingControl?.findViewById(R.id.widgetSpeak_btn) as ImageButton).setOnClickListener {
                     VoiceService.instance?.listen()
                 }
+                (floatingControl?.findViewById(R.id.widgetClose_btn) as ImageButton).setOnTouchListener(touchListener)
                 (floatingControl?.findViewById(R.id.widgetClose_btn) as ImageButton).setOnClickListener {
-                    initFloatingControl(false)
+                    if(abs(touchListener.initialX - params.x) < 10 && abs(touchListener.initialY - params.y) < 10)
+                        initFloatingControl(false)
                 }
                 (floatingControl?.findViewById(R.id.widgetPrev_btn) as ImageButton).setOnClickListener {
                     prev()
@@ -83,48 +128,13 @@ class MusicPlayerService : Service(),
                     next()
                 }
 
-                val params = WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                        PixelFormat.TRANSLUCENT)
-
                 params.gravity = Gravity.TOP or Gravity.LEFT
                 params.x = 30
                 params.y = 200
 
                 windowManager!!.addView(floatingControl, params)
 
-                try {
-                    floatingControl!!.setOnTouchListener(object : View.OnTouchListener {
-                        private var initialX: Int = 0
-                        private var initialY: Int = 0
-                        private var initialTouchX: Float = 0.toFloat()
-                        private var initialTouchY: Float = 0.toFloat()
-
-                        override fun onTouch(v: View, event: MotionEvent): Boolean {
-                            when (event.action) {
-                                MotionEvent.ACTION_DOWN -> {
-                                    initialX = params.x
-                                    initialY = params.y
-                                    initialTouchX = event.rawX
-                                    initialTouchY = event.rawY
-                                }
-                                MotionEvent.ACTION_UP -> {
-                                }
-                                MotionEvent.ACTION_MOVE -> {
-                                    params.x = initialX + (event.rawX - initialTouchX).toInt()
-                                    params.y = initialY + (event.rawY - initialTouchY).toInt()
-                                    windowManager!!.updateViewLayout(floatingControl, params)
-                                }
-                            }
-                            return false
-                        }
-                    })
-                } catch (e: Exception) {
-                    // TODO: handle exception
-                }
+                floatingControl!!.setOnTouchListener(touchListener)
             }
         } else {
             if (floatingControl != null){

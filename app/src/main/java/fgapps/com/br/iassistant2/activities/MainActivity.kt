@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity(),
     private var mVolumeShown: Boolean = false
     private var mButtonHandler: Handler? = null
     private var mEditHandler: Handler? = null
+    private var mWillGoToSettings: Boolean = false
 
     /*** Functions ***/
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -153,6 +154,7 @@ class MainActivity : AppCompatActivity(),
         settings_btn.setOnClickListener(object: View.OnClickListener{
             override fun onClick(p0: View?) {
                 val intent = Intent(this@MainActivity, SettingsActivity::class.java)
+                mWillGoToSettings = true
                 startActivity(intent)
             }
 
@@ -486,7 +488,8 @@ class MainActivity : AppCompatActivity(),
 
     override fun onPause() {
         super.onPause()
-        if(mBound) mMusicService.initFloatingControl(true)
+        if(mBound && !mWillGoToSettings) mMusicService.initFloatingControl(true)
+        mWillGoToSettings = false
     }
 
     override fun onDestroy() {
