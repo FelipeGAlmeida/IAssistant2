@@ -2,6 +2,8 @@ package fgapps.com.br.iassistant2.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import fgapps.com.br.iassistant2.R
+import kotlinx.android.synthetic.main.activity_settings.view.*
 
 object ShPrefs {
 
@@ -39,6 +41,20 @@ object ShPrefs {
         return instance.getBoolean("FEEDBACK", true)
     }
 
+    // FLOATING CONTROL
+
+    fun saveFloatingPreference(context: Context, option: Int){
+        init(context)
+        val editor = instance.edit()
+        editor.putInt("FLOAT", option)
+        editor.apply()
+    }
+
+    fun loadFloatingPreference(context: Context): Int{
+        init(context)
+        return instance.getInt("FLOAT", R.id.floatV_rbt)
+    }
+
     // PLAYLIST IDS
 
     fun saveLastPlayed(context: Context, playlistIds: String){
@@ -48,13 +64,8 @@ object ShPrefs {
         editor.apply()
     }
 
-    fun loadLastPlayed(context: Context): String?{
+    fun loadLastPlayed(context: Context): String? {
         init(context)
         return instance.getString("PLAYED", null)
     }
-
-
-
-
-
 }

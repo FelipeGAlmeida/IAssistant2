@@ -121,14 +121,37 @@
                 app:layout_constraintTop_toBottomOf="@+id/spn_voices" />
 
             <TextView
+                android:id="@+id/s2_txt2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="4dp"
+                android:text="Aqui você pode ligar ou desligar o controle flutuante para quando o aplicativo não estiver aberto. Além disso, pode optar pelo controle flutuante vertical ou horizontal."
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/swt_feedback" />
+
+            <TextView
                 android:id="@+id/textView2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="4dp"
                 android:text="Feedback de voz:"
+                app:layout_constraintBottom_toBottomOf="@+id/swt_feedback"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/s2_txt" />
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Controle flutuante:"
+                app:layout_constraintBottom_toBottomOf="@+id/rbt_group"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/s2_txt2" />
 
             <TextView
                 android:id="@+id/textView3"
@@ -158,10 +181,51 @@
                 android:layout_marginTop="500dp"
                 android:layout_marginEnd="4dp"
                 android:text="Versão do Aplicativo: 1.0.0 alpha"
+                android:textAlignment="center"
+                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/spn_voices" />
+
+            <RadioGroup
+                android:id="@+id/rbt_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/s2_txt2">
+
+                <RadioButton
+                    android:id="@+id/floatOff_rbt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:buttonTint="@drawable/thumb_mod1"
+                    android:checked="false"
+                    android:text="Desl."
+                    android:textColor="@android:color/white" />
+
+                <RadioButton
+                    android:id="@+id/floatV_rbt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:buttonTint="@drawable/thumb_mod1"
+                    android:checked="true"
+                    android:text="Vert."
+                    android:textColor="@android:color/white" />
+
+                <RadioButton
+                    android:id="@+id/floatH_rbt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:buttonTint="@drawable/thumb_mod1"
+                    android:text="Horiz."
+                    android:textColor="@android:color/white" />
+            </RadioGroup>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
