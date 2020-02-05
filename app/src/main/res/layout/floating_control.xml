@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/drop_mod1">
+
+    <ImageButton
+        android:id="@+id/widgetSpeak_btn"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/widgetClose_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/ic_assistant" />
+
+    <ImageButton
+        android:id="@+id/widgetClose_btn"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@android:drawable/ic_menu_close_clear_cancel" />
+
+    <ImageButton
+        android:id="@+id/widgetPrev_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/widgetSpeak_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/ic_prev" />
+
+    <ImageButton
+        android:id="@+id/widgetPP_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/widgetPrev_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/ic_playpause" />
+
+    <ImageButton
+        android:id="@+id/widgetNext_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/widgetPP_btn"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/ic_next" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

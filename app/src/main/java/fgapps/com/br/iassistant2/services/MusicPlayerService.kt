@@ -1,19 +1,34 @@
 package fgapps.com.br.iassistant2.services
 
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.ContentUris
+import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import fgapps.com.br.iassistant2.activities.MainActivity
 import fgapps.com.br.iassistant2.defines.MediaPlayerStates
 import fgapps.com.br.iassistant2.music.Music
 import fgapps.com.br.iassistant2.utils.Utils
 import kotlin.collections.ArrayList
+import android.graphics.PixelFormat
+import android.view.*
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
+import fgapps.com.br.iassistant2.R
 
 
 class MusicPlayerService : Service(),
@@ -22,6 +37,9 @@ class MusicPlayerService : Service(),
         MediaPlayer.OnErrorListener{
 
     private val binder = MusicPlayerBinder()
+
+    private var windowManager: WindowManager? = null
+    private var chatHead: View? = null
 
     private lateinit var mMediaPlayer: MediaPlayer
     private var mMainActivity: MainActivity? = null
@@ -39,6 +57,91 @@ class MusicPlayerService : Service(),
         super.onCreate()
         mMediaPlayer = MediaPlayer()
         initMusicPlayer()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun initFloatingControl() {
+        if(chatHead == null) {
+            windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            chatHead = inflater.inflate(R.layout.floating_control, null, true)
+
+            (chatHead?.findViewById(R.id.widgetSpeak_btn) as ImageButton).setOnClickListener {
+                VoiceService.instance?.listen()
+            }
+            (chatHead?.findViewById(R.id.widgetClose_btn) as ImageButton).setOnClickListener {
+                stopSelf()
+                mMainActivity?.finishAndRemoveTask()
+            }
+            (chatHead?.findViewById(R.id.widgetPrev_btn) as ImageButton).setOnClickListener {
+                prev()
+            }
+            (chatHead?.findViewById(R.id.widgetPP_btn) as ImageButton).setOnClickListener {
+                if (isPlaying()) pause()
+                else play()
+            }
+            (chatHead?.findViewById(R.id.widgetNext_btn) as ImageButton).setOnClickListener {
+                next()
+            }
+
+            val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT)
+
+            params.gravity = Gravity.TOP or Gravity.LEFT
+            params.x = 30
+            params.y = 200
+
+            windowManager!!.addView(chatHead, params)
+
+            try {
+                chatHead!!.setOnTouchListener(object : View.OnTouchListener {
+                    private var initialX: Int = 0
+                    private var initialY: Int = 0
+                    private var initialTouchX: Float = 0.toFloat()
+                    private var initialTouchY: Float = 0.toFloat()
+
+                    override fun onTouch(v: View, event: MotionEvent): Boolean {
+                        when (event.action) {
+                            MotionEvent.ACTION_DOWN -> {
+
+                                // Get current time in nano seconds.
+                                val pressTime = System.currentTimeMillis()
+
+
+                                // If double click...
+//                            if (pressTime - lastPressTime <= 300) {
+//                                createNotification()
+//                                this@MusicPlayerService.stopSelf()
+//                                mHasDoubleClicked = true
+//                            } else {     // If not double click....
+//                                mHasDoubleClicked = false
+//                            }
+//                            lastPressTime = pressTime
+                                initialX = params.x
+                                initialY = params.y
+                                initialTouchX = event.rawX
+                                initialTouchY = event.rawY
+                            }
+                            MotionEvent.ACTION_UP -> {
+                            }
+                            MotionEvent.ACTION_MOVE -> {
+                                params.x = initialX + (event.rawX - initialTouchX).toInt()
+                                params.y = initialY + (event.rawY - initialTouchY).toInt()
+                                windowManager!!.updateViewLayout(chatHead, params)
+                            }
+                        }
+                        return false
+                    }
+                })
+            } catch (e: Exception) {
+                // TODO: handle exception
+            }
+        }
     }
 
     fun initMusicPlayer() {
@@ -113,6 +216,7 @@ class MusicPlayerService : Service(),
 
     /*** Player controls ***/
     fun play() {
+        initFloatingControl()
         if(mPlaylist.size == 0) return
         if(mState == MediaPlayerStates.PAUSED) {
             mMediaPlayer.start()
@@ -240,12 +344,46 @@ class MusicPlayerService : Service(),
         mMainActivity = mainActivity
     }
 
-    /*** Service control ***/
-//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        return super.onStartCommand(intent, flags, startId)
-//    }
+    fun createNotification() {
+        val notificationIntent = Intent(applicationContext, MusicPlayerService::class.java)
+        val pendingIntent = PendingIntent.getService(applicationContext, 0, notificationIntent, 0)
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//    }
+        val builder = NotificationCompat.Builder(applicationContext, "ID")
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_assistant)
+                .setContentTitle("CONTENT TILE")
+                .setContentText("CONTENT TEXT")
+                .setTicker("THIS IS THE TICKER")
+                .setStyle(NotificationCompat.BigTextStyle()
+                        .bigText("CONTENT TEXT OF THE NOTIFICATION"))
+                //.setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("ID", "channel_name", importance).apply {
+                description = "description"
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                    applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        with(NotificationManagerCompat.from(applicationContext)) {
+            // notificationId is a unique int for each notification that you must define
+            notify(2, builder.build())
+        }
+
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(100, builder.build())
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        if (chatHead != null){
+            windowManager?.removeView(chatHead)
+            chatHead = null
+        }
+        return super.onUnbind(intent)
+    }
 }
