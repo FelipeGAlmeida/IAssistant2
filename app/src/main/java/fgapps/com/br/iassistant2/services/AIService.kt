@@ -87,6 +87,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
             Dictionary.LOAD -> {
                 mVoice?.speak("É pra já", "processando", false)
                 playPreviousPlaylist()
+                return
             }
             Dictionary.GOTO -> {
                 if(words.isEmpty()){
@@ -163,6 +164,7 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
                     Dictionary.LOAD -> {
                         mVoice?.speak("É pra já", "processando", false)
                         playPreviousPlaylist()
+                        return
                     }
                     Dictionary.GOTO -> {
                         if (words.isEmpty()) {
@@ -353,9 +355,11 @@ class AIService(mainActivity: MainActivity, musicService: MusicPlayerService): V
             }
         }
 
+        if(playlistIds.size == 0) return
         mMusicService.setPlaylist(MusicLoader.getPlaylistFromIds(playlistIds))
         mCommand = Dictionary.PLAY
         mCommandExtras = music_index
+        runCommand(300)
     }
 
     private fun playSpecificSong(payload: String){

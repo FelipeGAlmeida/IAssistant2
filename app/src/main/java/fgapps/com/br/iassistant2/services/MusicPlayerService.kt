@@ -25,9 +25,6 @@ import kotlin.collections.ArrayList
 import android.graphics.PixelFormat
 import android.view.*
 import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import fgapps.com.br.iassistant2.R
 
 
@@ -39,7 +36,7 @@ class MusicPlayerService : Service(),
     private val binder = MusicPlayerBinder()
 
     private var windowManager: WindowManager? = null
-    private var chatHead: View? = null
+    private var floatingControl: View? = null
 
     private lateinit var mMediaPlayer: MediaPlayer
     private var mMainActivity: MainActivity? = null
@@ -60,91 +57,84 @@ class MusicPlayerService : Service(),
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun initFloatingControl() {
-        if(chatHead == null) {
-            windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    fun initFloatingControl(enable: Boolean) {
+        if(mPlaylist.size == 0) return
+        if(enable) {
+            if (floatingControl == null) {
+                windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            chatHead = inflater.inflate(R.layout.floating_control, null, true)
+                val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                floatingControl = inflater.inflate(R.layout.floating_control, null, true)
 
-            (chatHead?.findViewById(R.id.widgetSpeak_btn) as ImageButton).setOnClickListener {
-                VoiceService.instance?.listen()
-            }
-            (chatHead?.findViewById(R.id.widgetClose_btn) as ImageButton).setOnClickListener {
-                stopSelf()
-                mMainActivity?.finishAndRemoveTask()
-            }
-            (chatHead?.findViewById(R.id.widgetPrev_btn) as ImageButton).setOnClickListener {
-                prev()
-            }
-            (chatHead?.findViewById(R.id.widgetPP_btn) as ImageButton).setOnClickListener {
-                if (isPlaying()) pause()
-                else play()
-            }
-            (chatHead?.findViewById(R.id.widgetNext_btn) as ImageButton).setOnClickListener {
-                next()
-            }
+                (floatingControl?.findViewById(R.id.widgetSpeak_btn) as ImageButton).setOnClickListener {
+                    VoiceService.instance?.listen()
+                }
+                (floatingControl?.findViewById(R.id.widgetClose_btn) as ImageButton).setOnClickListener {
+                    initFloatingControl(false)
+                }
+                (floatingControl?.findViewById(R.id.widgetPrev_btn) as ImageButton).setOnClickListener {
+                    prev()
+                }
+                (floatingControl?.findViewById(R.id.widgetPP_btn) as ImageButton).setOnClickListener {
+                    if (isPlaying()) pause()
+                    else play()
+                }
+                (floatingControl?.findViewById(R.id.widgetNext_btn) as ImageButton).setOnClickListener {
+                    next()
+                }
 
-            val params = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                    PixelFormat.TRANSLUCENT)
+                val params = WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                        PixelFormat.TRANSLUCENT)
 
-            params.gravity = Gravity.TOP or Gravity.LEFT
-            params.x = 30
-            params.y = 200
+                params.gravity = Gravity.TOP or Gravity.LEFT
+                params.x = 30
+                params.y = 200
 
-            windowManager!!.addView(chatHead, params)
+                windowManager!!.addView(floatingControl, params)
 
-            try {
-                chatHead!!.setOnTouchListener(object : View.OnTouchListener {
-                    private var initialX: Int = 0
-                    private var initialY: Int = 0
-                    private var initialTouchX: Float = 0.toFloat()
-                    private var initialTouchY: Float = 0.toFloat()
+                try {
+                    floatingControl!!.setOnTouchListener(object : View.OnTouchListener {
+                        private var initialX: Int = 0
+                        private var initialY: Int = 0
+                        private var initialTouchX: Float = 0.toFloat()
+                        private var initialTouchY: Float = 0.toFloat()
 
-                    override fun onTouch(v: View, event: MotionEvent): Boolean {
-                        when (event.action) {
-                            MotionEvent.ACTION_DOWN -> {
-
-                                // Get current time in nano seconds.
-                                val pressTime = System.currentTimeMillis()
-
-
-                                // If double click...
-//                            if (pressTime - lastPressTime <= 300) {
-//                                createNotification()
-//                                this@MusicPlayerService.stopSelf()
-//                                mHasDoubleClicked = true
-//                            } else {     // If not double click....
-//                                mHasDoubleClicked = false
-//                            }
-//                            lastPressTime = pressTime
-                                initialX = params.x
-                                initialY = params.y
-                                initialTouchX = event.rawX
-                                initialTouchY = event.rawY
+                        override fun onTouch(v: View, event: MotionEvent): Boolean {
+                            when (event.action) {
+                                MotionEvent.ACTION_DOWN -> {
+                                    initialX = params.x
+                                    initialY = params.y
+                                    initialTouchX = event.rawX
+                                    initialTouchY = event.rawY
+                                }
+                                MotionEvent.ACTION_UP -> {
+                                }
+                                MotionEvent.ACTION_MOVE -> {
+                                    params.x = initialX + (event.rawX - initialTouchX).toInt()
+                                    params.y = initialY + (event.rawY - initialTouchY).toInt()
+                                    windowManager!!.updateViewLayout(floatingControl, params)
+                                }
                             }
-                            MotionEvent.ACTION_UP -> {
-                            }
-                            MotionEvent.ACTION_MOVE -> {
-                                params.x = initialX + (event.rawX - initialTouchX).toInt()
-                                params.y = initialY + (event.rawY - initialTouchY).toInt()
-                                windowManager!!.updateViewLayout(chatHead, params)
-                            }
+                            return false
                         }
-                        return false
-                    }
-                })
-            } catch (e: Exception) {
-                // TODO: handle exception
+                    })
+                } catch (e: Exception) {
+                    // TODO: handle exception
+                }
+            }
+        } else {
+            if (floatingControl != null){
+                windowManager?.removeView(floatingControl)
+                floatingControl = null
             }
         }
     }
 
-    fun initMusicPlayer() {
+    private fun initMusicPlayer() {
         mMediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK)
         mMediaPlayer.setAudioAttributes(AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -216,7 +206,6 @@ class MusicPlayerService : Service(),
 
     /*** Player controls ***/
     fun play() {
-        initFloatingControl()
         if(mPlaylist.size == 0) return
         if(mState == MediaPlayerStates.PAUSED) {
             mMediaPlayer.start()
@@ -235,18 +224,21 @@ class MusicPlayerService : Service(),
     }
 
     fun stop() {
+        if(mPlaylist.size == 0) return
         mMediaPlayer.stop()
         mMediaPlayer.reset()
         setState(MediaPlayerStates.IDLE)
     }
 
     fun next() {
+        if(mPlaylist.size == 0) return
         music_idx++
         if(music_idx >= mPlaylist.size) music_idx = 0
         play(null)
     }
 
     fun prev() {
+        if(mPlaylist.size == 0) return
         music_idx--
         if(music_idx < 0) music_idx = mPlaylist.size-1
         play(null)
@@ -380,10 +372,7 @@ class MusicPlayerService : Service(),
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        if (chatHead != null){
-            windowManager?.removeView(chatHead)
-            chatHead = null
-        }
+        initFloatingControl(false)
         return super.onUnbind(intent)
     }
 }

@@ -169,6 +169,8 @@ class MainActivity : AppCompatActivity(),
                         return
                     }
                     mAI.playPreviousPlaylist()
+                    mButtonHandler!!.removeCallbacksAndMessages(null)
+                    mPanel.enablePanel(Panels.BACK)
                 } //else Toast.makeText(applicationContext, "SERVICE NOT BOUNDED", Toast.LENGTH_LONG).show()
             }
 
@@ -477,16 +479,29 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if(mBound) mMusicService.initFloatingControl(false)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if(mBound) mMusicService.initFloatingControl(true)
+    }
+
     override fun onDestroy() {
         mVoice?.stopVoiceServices()
         mExternalEvents?.stopExternalMonitoring() // Stop system broadcasts
 
-        var playlistIds = "${mMusicService.getCurrentMusicIndex()}@@"
-        for(music in mMusicService.getPlaylist()){
-            playlistIds += "${music.id}##"
+        if(mMusicService.getPlaylist().size > 0) {
+            var playlistIds = "${mMusicService.getCurrentMusicIndex()}@@" //Save last played playlist
+            for (music in mMusicService.getPlaylist()) {
+                playlistIds += "${music.id}##"
+            }
+
+            ShPrefs.saveLastPlayed(applicationContext, playlistIds)
         }
 
-        ShPrefs.saveLastPlayed(applicationContext, playlistIds)
         unbindService(connection) // Unbinds from local service
         mBound = false
 
