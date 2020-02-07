@@ -63,6 +63,8 @@ class SettingsActivity : AppCompatActivity() {
         rbt_group.setOnCheckedChangeListener{_, id ->
             ShPrefs.saveFloatingPreference(applicationContext, id)
         }
+
+        swt_notif.setOnCheckedChangeListener { _, b -> ShPrefs.saveNotificationPreference(applicationContext, b) }
     }
 
     private fun setVoices(reload: Boolean) {
@@ -89,6 +91,7 @@ class SettingsActivity : AppCompatActivity() {
         spn_voices.setSelection(ShPrefs.loadVoicePreference(applicationContext))
         swt_feedback.isChecked = ShPrefs.loadFeedbackPreference(applicationContext)
         rbt_group.check(ShPrefs.loadFloatingPreference(applicationContext))
+        swt_notif.isChecked = ShPrefs.loadNotificationPreference(applicationContext)
     }
 
     override fun onResume() {

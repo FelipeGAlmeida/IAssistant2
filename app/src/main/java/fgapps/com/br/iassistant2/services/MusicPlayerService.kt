@@ -227,7 +227,7 @@ class MusicPlayerService : Service(),
         if(mState == MediaPlayerStates.PAUSED) {
             mMediaPlayer.start()
             setState(MediaPlayerStates.STARTED)
-            Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
+            showNotification()
             return
         }
         play(null)
@@ -239,7 +239,7 @@ class MusicPlayerService : Service(),
 
         mMediaPlayer.pause()
         setState(MediaPlayerStates.PAUSED)
-        Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
+        showNotification()
     }
 
     fun stop() {
@@ -310,11 +310,16 @@ class MusicPlayerService : Service(),
         return mState
     }
 
+    fun showNotification() {
+        if(mPlaylist.size > 0)
+            Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
+    }
+
     /*** Media Player service functions ***/
     override fun onPrepared(p0: MediaPlayer?) {
         mMediaPlayer.start()
         setState(MediaPlayerStates.STARTED)
-        Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
+        showNotification()
         notifyMusicChanges()
     }
 
@@ -346,7 +351,7 @@ class MusicPlayerService : Service(),
 
     /*** Binder service code ***/
     override fun onBind(p0: Intent?): IBinder? {
-        //Notifications.createNotification(applicationContext, "nome de uma musica - doida", false)
+        //showNotification()
         return binder
     }
 

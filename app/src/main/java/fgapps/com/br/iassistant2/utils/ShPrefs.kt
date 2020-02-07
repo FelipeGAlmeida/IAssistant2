@@ -41,7 +41,7 @@ object ShPrefs {
         return instance.getBoolean("FEEDBACK", true)
     }
 
-    // FLOATING CONTROL
+    // SETTINGS FLOATING
 
     fun saveFloatingPreference(context: Context, option: Int){
         init(context)
@@ -53,6 +53,20 @@ object ShPrefs {
     fun loadFloatingPreference(context: Context): Int{
         init(context)
         return instance.getInt("FLOAT", R.id.floatV_rbt)
+    }
+
+    // SETTINGS NOTIFICATION
+
+    fun saveNotificationPreference(context: Context, enabled: Boolean){
+        init(context)
+        val editor = instance.edit()
+        editor.putBoolean("NOTIF", enabled)
+        editor.apply()
+    }
+
+    fun loadNotificationPreference(context: Context): Boolean{
+        init(context)
+        return instance.getBoolean("NOTIF", true)
     }
 
     // PLAYLIST IDS

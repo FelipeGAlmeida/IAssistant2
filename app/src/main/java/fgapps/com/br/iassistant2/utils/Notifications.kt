@@ -16,6 +16,11 @@ object Notifications {
     private val NOTIF_ID = 22
 
     fun createNotification(context: Context, musicName: String, isPlaying: Boolean) {
+        if(!ShPrefs.loadNotificationPreference(context)){
+            cancelNotification(context)
+            return
+        }
+
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val notificationLayout = RemoteViews(context.packageName, R.layout.notification_model)
@@ -31,6 +36,7 @@ object Notifications {
 //                    .setCustomBigContentView(notificationExpLayout)
                 .setColor(context.resources.getColor(R.color.colorAccent, null))
                 .setSubText("Player inicializado")
+                .setOngoing(true)
                 .setShowWhen(false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_LOW

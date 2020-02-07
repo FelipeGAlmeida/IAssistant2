@@ -485,7 +485,11 @@ class MainActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        if(mBound) mMusicService.initFloatingControl(false)
+        if(mBound){
+            mMusicService.initFloatingControl(false)
+            if(ShPrefs.loadNotificationPreference(this))
+                mMusicService.showNotification()
+        }
     }
 
     override fun onPause() {
