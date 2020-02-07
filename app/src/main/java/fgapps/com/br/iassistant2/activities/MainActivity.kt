@@ -155,6 +155,8 @@ class MainActivity : AppCompatActivity(),
             override fun onClick(p0: View?) {
                 val intent = Intent(this@MainActivity, SettingsActivity::class.java)
                 mWillGoToSettings = true
+                mButtonHandler!!.removeCallbacksAndMessages(null)
+                mPanel.enablePanel(Panels.BACK)
                 startActivity(intent)
             }
 

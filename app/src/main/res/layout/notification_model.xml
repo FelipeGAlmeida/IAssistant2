@@ -1,39 +1,32 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="2dp">
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:id="@+id/controls_container"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_toEndOf="@+id/icon_container"
         android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/notifAssist_btn"
+        <ImageView
+            android:id="@+id/imageView2"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_marginLeft="0dp"
-            android:layout_marginRight="4dp"
-            android:layout_weight="2"
-            android:background="@android:color/transparent"
-            android:padding="2dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_assistant"
-            android:tint="@color/colorPrimary" />
+            android:layout_weight="0"
+            android:paddingRight="2dp"
+            android:src="@drawable/ic_music"
+            android:tint="@android:color/holo_blue_light" />
 
         <TextView
             android:id="@+id/notifMusic_txt"
-            android:layout_width="140dp"
+            android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp"
-            android:layout_weight="2"
+            android:layout_marginRight="2dp"
+            android:layout_weight="3"
             android:text="Nome da musica sendo tocada nesse segundo"
             android:textColor="@android:color/black" />
 
@@ -41,7 +34,7 @@
             android:id="@+id/notifPrev_btn"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="3"
+            android:layout_weight="2"
             android:background="@android:color/transparent"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_prev"
@@ -51,7 +44,7 @@
             android:id="@+id/notifPP_btn"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="5"
+            android:layout_weight="4"
             android:background="@android:color/transparent"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_play"
@@ -61,11 +54,21 @@
             android:id="@+id/notifNext_btn"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="3"
+            android:layout_weight="2"
             android:background="@android:color/transparent"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_next"
             android:tint="@android:color/black" />
+
+        <ImageButton
+            android:id="@+id/notifAssist_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_mic"
+            android:tint="@android:color/holo_red_dark" />
     </LinearLayout>
 
 </RelativeLayout>

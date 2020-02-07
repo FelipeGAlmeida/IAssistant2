@@ -28,6 +28,7 @@ import android.widget.ImageButton
 import android.widget.RemoteViews
 import fgapps.com.br.iassistant2.R
 import fgapps.com.br.iassistant2.activities.NotificationActivity
+import fgapps.com.br.iassistant2.utils.Notifications
 import fgapps.com.br.iassistant2.utils.ShPrefs
 import kotlin.math.abs
 
@@ -226,7 +227,7 @@ class MusicPlayerService : Service(),
         if(mState == MediaPlayerStates.PAUSED) {
             mMediaPlayer.start()
             setState(MediaPlayerStates.STARTED)
-            createNotification()
+            Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
             return
         }
         play(null)
@@ -238,7 +239,7 @@ class MusicPlayerService : Service(),
 
         mMediaPlayer.pause()
         setState(MediaPlayerStates.PAUSED)
-        createNotification()
+        Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
     }
 
     fun stop() {
@@ -313,7 +314,7 @@ class MusicPlayerService : Service(),
     override fun onPrepared(p0: MediaPlayer?) {
         mMediaPlayer.start()
         setState(MediaPlayerStates.STARTED)
-        createNotification()
+        Notifications.createNotification(applicationContext, mPlaylist[music_idx].name, isPlaying())
         notifyMusicChanges()
     }
 
@@ -345,7 +346,7 @@ class MusicPlayerService : Service(),
 
     /*** Binder service code ***/
     override fun onBind(p0: Intent?): IBinder? {
-        //createNotification()
+        //Notifications.createNotification(applicationContext, "nome de uma musica - doida", false)
         return binder
     }
 
@@ -357,54 +358,9 @@ class MusicPlayerService : Service(),
         mMainActivity = mainActivity
     }
 
-    fun createNotification() {
-        notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager?.let {
-
-            val notificationLayout = RemoteViews(packageName, R.layout.notification_model)
-            //val notificationExpLayout = RemoteViews(packageName, R.layout.notification_exp_model)
-
-            notificationLayout.setTextViewText(R.id.notifMusic_txt, mPlaylist[music_idx].name)
-            if(isPlaying()) notificationLayout.setImageViewResource(R.id.notifPP_btn, R.drawable.ic_pause)
-            else notificationLayout.setImageViewResource(R.id.notifPP_btn, R.drawable.ic_play)
-
-            val assistIntent = Intent(applicationContext, NotificationActivity::class.java)
-            assistIntent.putExtra("notify", "assist")
-            notificationLayout.setOnClickPendingIntent(R.id.notifAssist_btn, PendingIntent.getService(applicationContext, 0, assistIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-
-            val prevIntent = Intent(applicationContext, NotificationActivity::class.java)
-            prevIntent.putExtra("notify", "prev")
-            notificationLayout.setOnClickPendingIntent(R.id.notifPrev_btn, PendingIntent.getService(applicationContext, 1, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-
-            val ppIntent = Intent(applicationContext, NotificationActivity::class.java)
-            ppIntent.putExtra("notify", "play/pause")
-            notificationLayout.setOnClickPendingIntent(R.id.notifPP_btn, PendingIntent.getService(applicationContext, 2, ppIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-
-            val nextIntent = Intent(applicationContext, NotificationActivity::class.java)
-            nextIntent.putExtra("notify", "next")
-            notificationLayout.setOnClickPendingIntent(R.id.notifNext_btn, PendingIntent.getService(applicationContext, 3, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-
-
-            val builder = NotificationCompat.Builder(applicationContext, "PC")
-                    .setSmallIcon(R.drawable.app_icon)
-                    .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                    .setCustomContentView(notificationLayout)
-                    //.setCustomBigContentView(notificationExpLayout)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val importance = NotificationManager.IMPORTANCE_LOW
-                val channel = NotificationChannel("PC", "Player control", importance).apply {
-                    description = "Allow user control music player through the notification."
-                }
-                it.createNotificationChannel(channel)
-            }
-
-            it.notify(22, builder.build())
-        }
-    }
-
     override fun onUnbind(intent: Intent?): Boolean {
         initFloatingControl(false)
-        notificationManager?.cancel(22)
+        Notifications.cancelNotification(applicationContext)
         return super.onUnbind(intent)
     }
 }
