@@ -63,6 +63,9 @@ object Utils {
         /*** lowerCase correction ***/
         if(lowerCase) string = string.toLowerCase()
 
+        /*** dot at end correction ***/
+        if(string.endsWith(".")) string = string.dropLast(1)
+
         return string
     }
 

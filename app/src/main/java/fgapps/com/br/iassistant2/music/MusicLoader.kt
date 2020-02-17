@@ -27,22 +27,21 @@ class MusicLoader {
 
             if(musicCursor != null && musicCursor.moveToFirst()){
                 //Get columns
-                val titleColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE)
-                val idColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID)
-                val artistColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.ARTIST)
-                val nameColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+                val titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
+                val idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                val artistColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
                 val c = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA)
 
                 do {
                     val thisId = musicCursor.getLong(idColumn)
                     val thisTitle = musicCursor.getString(titleColumn)
                     val thisArtist = musicCursor.getString(artistColumn)
-                    val thisName = musicCursor.getString(nameColumn)
                     var thisFolder = musicCursor.getString(c)
                     val path = thisFolder.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                    val thisName = path[path.size - 1].dropLast(4)
                     thisFolder = path[path.size - 2]
                     if (!thisName.contains("AUD-") && !thisFolder.contains("WhatsApp Audio"))
-                        allMusic.add(Music(thisId, thisTitle, thisArtist, thisName.replace(".mp3", ""), thisFolder))
+                        allMusic.add(Music(thisId, thisName, thisTitle, thisArtist, thisFolder))
                     else
                         Log.v("MUSIC_LIST", "Song $thisName wasn't added!")
                 }while(musicCursor.moveToNext())
